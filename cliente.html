@@ -1,0 +1,315 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Garçom Digital - Cliente</title>
+    <style>
+        :root {
+            --primary: #3498db;
+            --secondary: #2ecc71;
+            --accent: #f1c40f;
+            --bg: #f8f9fa;
+            --dark: #2c3e50;
+            --text: #333;
+            --shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+        
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+        
+        body {
+            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            margin: 0;
+            background: var(--bg);
+            color: var(--text);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        #app-container {
+            width: 100%;
+            max-width: 500px;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            animation: fadeIn 0.5s ease-out;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .header {
+            text-align: center;
+            padding: 30px 0;
+            background: white;
+            border-radius: 20px;
+            box-shadow: var(--shadow);
+            width: 100%;
+        }
+
+        .header h1 { margin: 0; font-size: 1.5rem; color: var(--dark); letter-spacing: 1px; }
+        
+        .mesa-badge {
+            background: var(--accent);
+            color: var(--dark);
+            padding: 5px 20px;
+            border-radius: 50px;
+            font-weight: 800;
+            font-size: 0.9rem;
+            display: inline-block;
+            margin-top: 10px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+
+        .menu-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            width: 100%;
+        }
+
+        .btn-card {
+            background: white;
+            border: none;
+            padding: 25px 15px;
+            border-radius: 18px;
+            box-shadow: var(--shadow);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 10px;
+            cursor: pointer;
+            transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            font-weight: 600;
+            font-size: 0.95rem;
+            color: var(--dark);
+        }
+
+        .btn-card:active { transform: scale(0.92); box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
+        
+        .btn-card.full { grid-column: span 2; flex-direction: row; justify-content: center; padding: 20px; }
+
+        .icon { font-size: 2rem; }
+        
+        .btn-waiter .icon { color: var(--primary); }
+        .btn-bill .icon { color: var(--secondary); }
+        .btn-menu .icon { color: var(--accent); }
+        .btn-wifi .icon { color: #8e44ad; }
+
+        /* Pop-up Overlay */
+        #overlay {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.5);
+            display: none;
+            align-items: center; justify-content: center;
+            z-index: 1000;
+            backdrop-filter: blur(5px);
+            padding: 20px;
+        }
+
+        .modal {
+            background: white;
+            padding: 30px;
+            border-radius: 25px;
+            text-align: center;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+            max-width: 400px;
+            width: 100%;
+            transform: scale(0.8);
+            opacity: 0;
+            transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        .modal.show { transform: scale(1); opacity: 1; }
+
+        .modal h2 { margin-top: 0; color: var(--dark); }
+        .modal p { color: #666; line-height: 1.5; }
+        
+        .btn-close {
+            background: var(--primary);
+            color: white;
+            border: none;
+            padding: 12px 30px;
+            border-radius: 50px;
+            font-weight: bold;
+            margin-top: 15px;
+            cursor: pointer;
+        }
+
+        /* Star Animation */
+        .star {
+            position: absolute;
+            pointer-events: none;
+            animation: starExplode 0.8s ease-out forwards;
+            font-size: 20px;
+            color: var(--accent);
+        }
+
+        @keyframes starExplode {
+            0% { transform: scale(0) rotate(0); opacity: 1; }
+            100% { transform: scale(2) rotate(180deg) translate(var(--tx), var(--ty)); opacity: 0; }
+        }
+    </style>
+</head>
+<body>
+
+    <div id="app-container">
+        <div class="header">
+            <h1>Sabor & Conforto</h1>
+            <div id="display-mesa" class="mesa-badge">MESA ??</div>
+        </div>
+
+        <div class="menu-grid">
+            <button class="btn-card btn-waiter" onclick="acao('garcom')">
+                <span class="icon">🙋‍♂️</span>
+                <span>Chamar Garçom</span>
+            </button>
+            <button class="btn-card btn-bill" onclick="acao('conta')">
+                <span class="icon">💵</span>
+                <span>Pedir Conta</span>
+            </button>
+            <button class="btn-card btn-menu full" onclick="acao('cardapio')">
+                <span class="icon">📖</span>
+                <span>Ver Cardápio Digital</span>
+            </button>
+            <button class="btn-card btn-wifi full" onclick="acao('wifi')">
+                <span class="icon">📶</span>
+                <span>Conectar ao Wi-Fi</span>
+            </button>
+        </div>
+    </div>
+
+    <div id="overlay">
+        <div class="modal" id="modal">
+            <div id="modal-icon" style="font-size: 50px; margin-bottom: 10px;">✨</div>
+            <h2 id="modal-title">Solicitado!</h2>
+            <p id="modal-text">Seu pedido foi enviado com sucesso.</p>
+            <button class="btn-close" onclick="fecharModal()">OK</button>
+        </div>
+    </div>
+
+    <script>
+        const urlParams = new URLSearchParams(window.location.search);
+        const numeroMesa = urlParams.get('mesa') || "1";
+        document.getElementById('display-mesa').innerText = "MESA " + numeroMesa;
+
+        let audioCtx = null;
+        let lastAcknowledgeTimestamp = 0;
+
+        function initAudio() {
+            if (!audioCtx) {
+                audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            }
+        }
+
+        function playClickSound() {
+            initAudio();
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.type = 'sine';
+            osc.frequency.setValueAtTime(800, audioCtx.currentTime);
+            osc.frequency.exponentialRampToValueAtTime(100, audioCtx.currentTime + 0.1);
+            gain.gain.setValueAtTime(0.1, audioCtx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.1);
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+            osc.start();
+            osc.stop(audioCtx.currentTime + 0.1);
+        }
+
+        function playStarSound() {
+            initAudio();
+            const now = audioCtx.currentTime;
+            [440, 554, 659, 880].forEach((freq, i) => {
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+                osc.frequency.setValueAtTime(freq, now + i * 0.1);
+                gain.gain.setValueAtTime(0.1, now + i * 0.1);
+                gain.gain.exponentialRampToValueAtTime(0.01, now + i * 0.1 + 0.3);
+                osc.connect(gain);
+                gain.connect(audioCtx.destination);
+                osc.start(now + i * 0.1);
+                osc.stop(now + i * 0.1 + 0.3);
+            });
+        }
+
+        function createStars() {
+            const modal = document.getElementById('modal');
+            const rect = modal.getBoundingClientRect();
+            for(let i=0; i<12; i++) {
+                const star = document.createElement('div');
+                star.className = 'star';
+                star.innerText = '⭐';
+                star.style.left = '50%';
+                star.style.top = '50%';
+                star.style.setProperty('--tx', (Math.random() - 0.5) * 300 + 'px');
+                star.style.setProperty('--ty', (Math.random() - 0.5) * 300 + 'px');
+                modal.appendChild(star);
+                setTimeout(() => star.remove(), 800);
+            }
+        }
+
+        function acao(tipo) {
+            playClickSound();
+            if (tipo === 'wifi') {
+                mostrarModal("Wi-Fi Liberado", "Rede: Restaurante_WiFi\nSenha: sabor2024", "📶");
+                return;
+            }
+            if (tipo === 'cardapio') {
+                mostrarModal("Cardápio Digital", "Carregando as melhores opções para você...", "📖");
+                return;
+            }
+
+            fetch('/api/state', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ mesa: numeroMesa, tipo: tipo, origem: 'cliente' })
+            }).then(() => {
+                mostrarModal("Solicitado!", "Aguarde um momento, o garçom já foi notificado.", "🙋‍♂️");
+            }).catch(() => {
+                alert("Erro ao conectar. Verifique sua internet.");
+            });
+        }
+
+        function mostrarModal(title, text, icon) {
+            document.getElementById('modal-title').innerText = title;
+            document.getElementById('modal-text').innerText = text;
+            document.getElementById('modal-icon').innerText = icon || "✨";
+            document.getElementById('overlay').style.display = 'flex';
+            setTimeout(() => {
+                document.getElementById('modal').classList.add('show');
+            }, 10);
+        }
+
+        function fecharModal() {
+            document.getElementById('modal').classList.remove('show');
+            setTimeout(() => {
+                document.getElementById('overlay').style.display = 'none';
+            }, 300);
+        }
+
+        function checkStatus() {
+            fetch('/api/state')
+                .then(r => r.json())
+                .then(state => {
+                    const mesaState = state[numeroMesa];
+                    if (mesaState && mesaState.status === 'acknowledged' && mesaState.timestamp > lastAcknowledgeTimestamp) {
+                        lastAcknowledgeTimestamp = mesaState.timestamp;
+                        playStarSound();
+                        createStars();
+                        mostrarModal("A caminho!", mesaState.mensagem || "O garçom está indo até você.", "✨");
+                    }
+                });
+        }
+
+        setInterval(checkStatus, 3000);
+    </script>
+</body>
+</html>
