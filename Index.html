@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com" rel="stylesheet">
+    <title>Fatia's - Controle Total</title>
+    <style>
+        @import url('https://fonts.googleapis.com');
+        
+        :root { --gold: #E6B952; --dark: #0a0a0a; }
+
+        body { 
+            background-color: var(--dark); 
+            color: var(--gold); 
+            font-family: 'Montserrat', sans-serif;
+            overflow: hidden; /* Impede scroll */
+            height: 100vh;
+            width: 100vw;
+        }
+
+        /* Botão Estilo Controle Remoto */
+        .btn-main {
+            background: linear-gradient(145deg, #1a1a1a, #050505);
+            border: 2px solid var(--gold);
+            border-radius: 24px;
+            transition: all 0.15s ease;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.6);
+        }
+
+        .btn-main:active {
+            transform: scale(0.94);
+            background: var(--gold);
+            color: #000;
+        }
+
+        /* Botões de Sistema no Rodapé */
+        .btn-system {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 12px;
+            padding: 12px;
+            color: #666;
+            transition: 0.3s;
+        }
+
+        .btn-system.exit:active { background: #ef4444; color: white; border-color: #ef4444; }
+        .btn-system.min:active { background: #3b82f6; color: white; border-color: #3b82f6; }
+
+        /* Full Screen Overlay para ativação */
+        #fullscreen-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.9); z-index: 9999;
+            display: flex; align-items: center; justify-content: center;
+            text-align: center;
+        }
+    </style>
+</head>
+<body class="flex flex-col">
+
+    <!-- Overlay de Ativação (Necessário para forçar Full Screen no Navegador) -->
+    <div id="fullscreen-overlay" onclick="startApp()">
+        <div class="p-6 border-2 border-dashed border-[#E6B952] rounded-3xl">
+            <i class="fas fa-expand text-5xl mb-4 animate-bounce"></i>
+            <h2 class="text-xl font-bold">TOQUE PARA INICIAR</h2>
+            <p class="text-sm opacity-50">Modo Controle Remoto Fatia's</p>
+        </div>
+    </div>
+
+    <!-- Interface Principal -->
+    <div class="flex-grow flex flex-col justify-between p-6">
+        
+        <!-- Topo: Logo e Mesa -->
+        <header class="text-center pt-4">
+            <div class="mb-4 flex justify-center">
+                <!-- Substitua pelo link real da sua imagem -->
+                <img src="https://i.ibb.co" alt="Logo Fatia's" class="h-20 object-contain">
+            </div>
+            <div class="inline-flex flex-col items-center">
+                <span class="text-[10px] tracking-[0.4em] uppercase text-gray-500 mb-1">Identificação</span>
+                <div class="bg-[#E6B952] text-black font-black px-8 py-1 rounded-full text-xl shadow-lg">
+                    MESA 14
+                </div>
+            </div>
+        </header>
+
+        <!-- Teclado Grid 4 Teclas -->
+        <main class="grid grid-cols-2 gap-4 max-w-sm mx-auto w-full">
+            <button class="btn-main h-36 flex flex-col items-center justify-center">
+                <i class="fas fa-pizza-slice text-3xl mb-2"></i>
+                <span class="font-bold text-xs uppercase">Cardápio</span>
+            </button>
+
+            <button class="btn-main h-36 flex flex-col items-center justify-center">
+                <i class="fas fa-hand-paper text-3xl mb-2"></i>
+                <span class="font-bold text-xs uppercase text-center">Chamar<br>Garçom</span>
+            </button>
+
+            <button class="btn-main h-36 flex flex-col items-center justify-center">
+                <i class="fas fa-wifi text-3xl mb-2"></i>
+                <span class="font-bold text-xs uppercase">Wi-Fi</span>
+            </button>
+
+            <button class="btn-main h-36 flex flex-col items-center justify-center">
+                <i class="fas fa-file-invoice-dollar text-3xl mb-2"></i>
+                <span class="font-bold text-xs uppercase">A Conta</span>
+            </button>
+        </main>
+
+        <!-- Rodapé: Sistema -->
+        <footer class="grid grid-cols-2 gap-4 max-w-sm mx-auto w-full pb-4">
+            <button class="btn-system min flex items-center justify-center gap-2 text-xs uppercase font-bold" onclick="toggleMinimizar()">
+                <i class="fas fa-compress-alt"></i> Minimizar
+            </button>
+            <button class="btn-system exit flex items-center justify-center gap-2 text-xs uppercase font-bold" onclick="fecharApp()">
+                <i class="fas fa-power-off"></i> Sair
+            </button>
+        </footer>
+
+    </div>
+
+    <script>
+        // Função para ativar Full Screen
+        function startApp() {
+            const elem = document.documentElement;
+            if (elem.requestFullscreen) {
+                elem.requestFullscreen();
+            } else if (elem.webkitRequestFullscreen) { /* Safari */
+                elem.webkitRequestFullscreen();
+            } else if (elem.msRequestFullscreen) { /* IE11 */
+                elem.msRequestFullscreen();
+            }
+            document.getElementById('fullscreen-overlay').style.display = 'none';
+        }
+
+        // Funções de Sistema (Lógica para seu Backend)
+        function fecharApp() {
+            if (confirm("Deseja encerrar o atendimento?")) {
+                window.close();
+                // Fallback se window.close() for bloqueado:
+                window.location.href = "about:blank";
+            }
+        }
+
+        function toggleMinimizar() {
+            if (document.fullscreenElement) {
+                document.exitFullscreen();
+                document.getElementById('fullscreen-overlay').style.display = 'flex';
+            }
+        }
+    </script>
+
+</body>
+</html>
