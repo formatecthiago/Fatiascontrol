@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Font Awesome para os Ícones -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com">
+    <title>Controle Remoto - Fatia's</title>
+    <style>
+        @import url('https://fonts.googleapis.com');
+        
+        :root { --gold: #E6B952; --dark: #0a0a0a; }
+
+        body { 
+            background-color: var(--dark); 
+            color: var(--gold); 
+            font-family: 'Montserrat', sans-serif;
+            overflow: hidden;
+            height: 100vh;
+            width: 100vw;
+            margin: 0;
+        }
+
+        /* Botão Estilo Premium */
+        .btn-main {
+            background: linear-gradient(145deg, #1a1a1a, #050505);
+            border: 1px solid rgba(230, 185, 82, 0.4);
+            border-radius: 20px;
+            transition: all 0.15s ease;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.6);
+        }
+
+        .btn-main i { color: var(--gold); font-size: 1.8rem; }
+
+        .btn-main:active {
+            transform: scale(0.95);
+            background: var(--gold);
+            border-color: #fff;
+        }
+        
+        .btn-main:active i, .btn-main:active span { color: #000; }
+
+        /* Rodapé de Sistema */
+        .btn-system {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(230, 185, 82, 0.2);
+            border-radius: 12px;
+            padding: 12px;
+            color: #888;
+            font-size: 0.65rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .btn-system:active { background: var(--gold); color: #000; }
+        .exit:active { background: #ef4444 !important; color: white !important; }
+
+        /* Camada de Inicialização */
+        #setup-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: var(--dark); z-index: 9999;
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            text-align: center;
+        }
+    </style>
+</head>
+<body class="flex flex-col">
+
+    <!-- Overlay de Entrada -->
+    <div id="setup-overlay" onclick="ativarControle()">
+        <!-- Logo Temporária Estética -->
+        <img src="https://img.freepik.com" alt="Fatia's" class="w-48 h-48 rounded-full mb-8 border-2 border-[#E6B952] object-cover shadow-2xl">
+        <div class="px-8 py-4 border-2 border-[#E6B952] rounded-full animate-pulse text-[#E6B952] font-bold tracking-widest text-sm">
+            TOQUE PARA INICIAR
+        </div>
+    </div>
+
+    <!-- Layout Principal -->
+    <div class="flex-grow flex flex-col justify-between p-6 h-screen">
+        
+        <!-- Topo -->
+        <header class="text-center pt-4">
+            <img src="https://img.freepik.com" alt="Logo" class="h-24 w-24 mx-auto rounded-full border border-[#E6B952] mb-3">
+            <div class="inline-block">
+                <p class="text-[10px] uppercase tracking-[0.4em] text-gray-400 font-bold">Atendimento Digital</p>
+                <div class="text-4xl font-black italic tracking-tighter text-white">MESA <span class="text-[#E6B952]">14</span></div>
+                <div class="h-[3px] w-full bg-[#E6B952] mt-1 shadow-[0_0_10px_#E6B952]"></div>
+            </div>
+        </header>
+
+        <!-- Grade de Comandos (4 Teclas) -->
+        <main class="grid grid-cols-2 gap-4 max-w-sm mx-auto w-full px-2">
+            <button class="btn-main h-32 flex flex-col items-center justify-center gap-3">
+                <i class="fas fa-utensils"></i>
+                <span class="font-bold text-[11px] uppercase tracking-wider">Cardápio</span>
+            </button>
+
+            <button class="btn-main h-32 flex flex-col items-center justify-center gap-3">
+                <i class="fas fa-bell-concierge"></i>
+                <span class="font-bold text-[11px] uppercase tracking-wider text-center leading-tight">Chamar<br>Garçom</span>
+            </button>
+
+            <button class="btn-main h-32 flex flex-col items-center justify-center gap-3">
+                <i class="fas fa-wifi"></i>
+                <span class="font-bold text-[11px] uppercase tracking-wider text-center">Senha<br>Wi-Fi</span>
+            </button>
+
+            <button class="btn-main h-32 flex flex-col items-center justify-center gap-3">
+                <i class="fas fa-receipt"></i>
+                <span class="font-bold text-[11px] uppercase tracking-wider">Pedir Conta</span>
+            </button>
+        </main>
+
+        <!-- Rodapé -->
+        <footer class="grid grid-cols-2 gap-3 max-w-sm mx-auto w-full pb-4">
+            <button class="btn-system flex items-center justify-center gap-2" onclick="minimizarApp()">
+                <i class="fas fa-minimize"></i> Minimizar
+            </button>
+            <button class="btn-system exit flex items-center justify-center gap-2" onclick="fecharApp()">
+                <i class="fas fa-power-off"></i> Sair
+            </button>
+        </footer>
+
+    </div>
+
+    <script>
+        function ativarControle() {
+            const doc = document.documentElement;
+            if (doc.requestFullscreen) doc.requestFullscreen();
+            else if (doc.webkitRequestFullscreen) doc.webkitRequestFullscreen();
+            
+            document.getElementById('setup-overlay').style.display = 'none';
+        }
+
+        function minimizarApp() {
+            if (document.fullscreenElement || document.webkitFullscreenElement) {
+                if (document.exitFullscreen) document.exitFullscreen();
+                else if (document.webkitExitFullscreen) document.webkitExitFullscreen();
+                document.getElementById('setup-overlay').style.display = 'flex';
+            }
+        }
+
+        function fecharApp() {
+            if(confirm("Deseja encerrar o atendimento na Mesa 14?")) {
+                window.location.reload(); 
+            }
+        }
+    </script>
+
+</body>
+</html>
