@@ -17,12 +17,12 @@
     </style>
 </head>
 <body class="p-6">
-    <h1 class="text-2xl font-black italic mb-8">PAINEL <span class="gold">CONTROLADOR</span></h1>
+    <h1 class="text-2xl font-black italic mb-8 uppercase">Painel <span class="gold">Controlador</span></h1>
     <div id="lista" class="space-y-4"></div>
     
     <script>
         let ultimoCount = 0;
-        const somForte = new Audio('https://mixkit.co');
+        const somForte = new Audio('/alerta.mp3');
 
         function atualizar() {
             fetch('/obter-chamados').then(res => res.json()).then(dados => {
@@ -30,10 +30,12 @@
                 
                 if(dados.length > ultimoCount) {
                     somForte.play().catch(()=>{});
+                    if (navigator.vibrate) navigator.vibrate([200, 100, 200]);
                     ultimoCount = dados.length;
                 }
+                
                 if(dados.length === 0) {
-                    lista.innerHTML = '<p class="text-gray-600">Nenhum chamado pendente...</p>';
+                    lista.innerHTML = '<p class="text-gray-600 italic">Aguardando chamados...</p>';
                     ultimoCount = 0;
                     return;
                 }
@@ -41,10 +43,10 @@
                 lista.innerHTML = '';
                 dados.forEach(c => {
                     const div = document.createElement('div');
-                    div.className = "card-alerta p-5 flex justify-between items-center rounded-xl";
+                    div.className = "card-alerta p-5 flex justify-between items-center rounded-xl mb-4";
                     div.innerHTML = `
-                        <div><b class="text-2xl gold italic">MESA ${c.mesa}</b><br><span class="text-sm uppercase font-bold">${c.acao}</span></div>
-                        <button onclick="resolver(${c.id}, '${c.mesa}')" class="bg-[#E6B952] text-black px-8 py-3 rounded-lg font-bold">OK</button>
+                        <div><b class="text-2xl gold italic uppercase tracking-tighter">Mesa ${c.mesa}</b><br><span class="text-sm uppercase font-bold text-white">${c.acao}</span></div>
+                        <button onclick="resolver(${c.id}, '${c.mesa}')" class="bg-[#E6B952] text-black px-8 py-3 rounded-lg font-bold uppercase text-xs">Atender</button>
                     `;
                     lista.appendChild(div);
                 });
