@@ -2,15 +2,13 @@
   "name": "fatiascontrol",
   "version": "1.0.0",
   "description": "Sistema de controle de fatias",
-  "main": "server.js",
+  "main": "servidor.js",
   "scripts": {
-    "start": "node server.js",
+    "start": "node servidor.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "dependencies": {
-    "express": "^4.18.2",
-    "cors": "^2.8.5",
-    "dotenv": "^16.0.3"
+    "express": "^4.18.2"
   },
   "engines": {
     "node": "18.x"
