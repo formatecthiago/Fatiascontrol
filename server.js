@@ -1,6 +1,6 @@
 const express = require('express');
 const path = require('path');
-const app = express();
+const app = express(); // ESTA LINHA CORRIGE O ERRO
 
 app.use(express.json());
 app.use(express.static(__dirname));
@@ -29,19 +29,17 @@ app.post('/enviar-chamado', (req, res) => {
         hora: new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }) 
     };
     chamados.push(novoChamado);
-    res.status(200).json({ message: "Chamado enviado!" });
+    res.status(200).json({ message: "Enviado!" });
 });
 
-// Obter todos os chamados (para o Painel)
 app.get('/obter-chamados', (req, res) => {
     res.json(chamados);
 });
 
-// Resolver/Deletar chamado
 app.delete('/resolver-chamado/:id', (req, res) => {
     const id = parseInt(req.params.id);
     chamados = chamados.filter(c => c.id !== id);
-    res.status(200).send("Resolvido");
+    res.status(200).send("OK");
 });
 
 app.get('/', (req, res) => {
@@ -49,5 +47,5 @@ app.get('/', (req, res) => {
 });
 
 app.listen(PORT, () => {
-    console.log(`Servidor Fatias Control rodando na porta ${PORT}`);
+    console.log(`Servidor rodando na porta ${PORT}`);
 });
