@@ -2,74 +2,63 @@
 <html lang="pt-br">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <script src="https://tailwindcss.com"></script>
-    <link rel="stylesheet" href="https://cloudflare.com">
-    <title>Mapa de Mesas - Fatias</title>
+    <title>Painel Mapa - Fatias</title>
     <style>
         @import url('https://googleapis.com');
-        body { background: #050505; color: white; font-family: 'Montserrat', sans-serif; }
-        .grid-mesas { display: grid; grid-template-columns: repeat(auto-fill, minmax(110px, 1fr)); gap: 10px; }
-        .mesa-box { background: #111; border: 1px solid #222; transition: all 0.3s; position: relative; }
-        .mesa-ativa { background: #d32f2f !important; border-color: #ff4444; animation: pulse 1s infinite alternate; }
-        @keyframes pulse { from { opacity: 1; } to { opacity: 0.7; } }
-        .btn-acao { font-size: 10px; padding: 5px; border-radius: 4px; text-transform: uppercase; font-weight: 900; }
+        body { background: #0a0a0a; color: white; font-family: 'Montserrat', sans-serif; }
+        .grid-mesas { display: grid; grid-template-columns: repeat(auto-fill, minmax(90px, 1fr)); gap: 10px; }
+        .mesa-card { background: #1a1a1a; border: 1px solid #333; height: 110px; transition: 0.3s; }
+        .ativa { background: #d32f2f !important; border-color: #ff4444; animation: blink 1s infinite alternate; }
+        @keyframes blink { from { opacity: 1; } to { opacity: 0.6; } }
+        .btn-mini { font-size: 9px; font-weight: bold; padding: 4px; border-radius: 4px; text-transform: uppercase; }
     </style>
 </head>
 <body class="p-4">
-    <header class="flex justify-between items-center mb-6">
-        <h1 class="text-xl font-black italic uppercase">MAPA <span class="text-[#E6B952]">Fatias Control</span></h1>
-        <div id="status" class="text-[10px] text-green-500 font-bold">SISTEMA ONLINE</div>
-    </header>
-    
+    <h1 class="text-xl font-black italic mb-6 uppercase">Mapa <span class="text-[#E6B952]">Fatias Control</span></h1>
     <div id="grid" class="grid-mesas"></div>
-    <audio id="som" src="/alerta.mp3"></audio>
+    <audio id="som" src="/alerta.mp3" preload="auto"></audio>
 
     <script>
-        let totalCliquesPassado = 0;
+        let totalCliquesAntigo = 0;
         const som = document.getElementById('som');
 
         function atualizar() {
             fetch('/obter-estado-geral').then(res => res.json()).then(mesas => {
                 const grid = document.getElementById('grid');
                 grid.innerHTML = '';
-                let totalCliquesAgora = 0;
+                let totalCliquesNovo = 0;
 
                 for(let i=1; i<=50; i++) {
                     const m = mesas[i];
-                    totalCliquesAgora += m.quantidade;
-                    
+                    totalCliquesNovo += m.quantidade;
                     const div = document.createElement('div');
-                    div.className = `mesa-box p-2 rounded-lg flex flex-col items-center justify-between h-32 ${m.ativa ? 'mesa-ativa' : ''}`;
+                    div.className = `mesa-card p-2 rounded-xl flex flex-col items-center justify-between ${m.ativa ? 'ativa' : ''}`;
                     
                     div.innerHTML = `
-                        <div class="text-[10px] opacity-50 uppercase">Mesa</div>
-                        <div class="text-3xl font-black">${i}</div>
+                        <span class="text-[10px] text-gray-500">MESA</span>
+                        <b class="text-2xl">${i}</b>
                         ${m.ativa ? `
-                            <div class="text-[9px] leading-tight font-bold text-center bg-black/40 p-1 rounded w-full">
-                                ${m.acao} (${m.quantidade}x)
+                            <div class="text-[8px] bg-black/40 p-1 rounded w-full text-center">${m.acao} (${m.quantidade}x)</div>
+                            <div class="flex gap-1 w-full">
+                                <button onclick="atender(${i})" class="btn-mini bg-green-600 flex-1">OK</button>
+                                <button onclick="limpar(${i})" class="btn-mini bg-black flex-1 border border-gray-600">X</button>
                             </div>
-                            <div class="flex gap-1 w-full mt-1">
-                                <button onclick="atender(${i})" class="btn-acao bg-green-600 flex-1">OK</button>
-                                <button onclick="limpar(${i})" class="btn-acao bg-black flex-1 border border-white/20"><i class="fas fa-trash"></i></button>
-                            </div>
-                        ` : '<div class="text-[9px] text-gray-700 font-bold uppercase mt-2">Livre</div>'}
+                        ` : '<span class="text-[8px] text-gray-700">LIVRE</span>'}
                     `;
                     grid.appendChild(div);
                 }
 
-                if(totalCliquesAgora > totalCliquesPassado) {
+                if(totalCliquesNovo > totalCliquesAntigo) {
                     som.play().catch(()=>{});
-                    totalCliquesPassado = totalCliquesAgora;
+                    totalCliquesAntigo = totalCliquesNovo;
                 }
             });
         }
-
         function atender(n) { fetch('/atender/'+n, {method:'POST'}).then(atualizar); }
         function limpar(n) { fetch('/limpar/'+n, {method:'POST'}).then(atualizar); }
-
         setInterval(atualizar, 3000);
-        atualizar(); // Carga inicial
+        atualizar();
     </script>
 </body>
 </html>
