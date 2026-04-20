@@ -1,6 +1,6 @@
 const express = require('express');
 const path = require('path');
-const app = express(); // ESTA LINHA CORRIGE O ERRO
+const app = express();
 
 app.use(express.json());
 app.use(express.static(__dirname));
@@ -9,17 +9,17 @@ const PORT = process.env.PORT || 3000;
 
 let chamados = [];
 
-// Rota para o Cliente (Mesa)
+// Rota Cliente
 app.get('/mesa/:numero', (req, res) => {
     res.sendFile(path.join(__dirname, 'index.html'));
 });
 
-// Rota para o Gerente (Painel)
+// Rota Gerente
 app.get('/painel', (req, res) => {
     res.sendFile(path.join(__dirname, 'painel.html'));
 });
 
-// Receber chamado da mesa
+// Enviar chamado
 app.post('/enviar-chamado', (req, res) => {
     const { mesa, acao } = req.body;
     const novoChamado = { 
@@ -29,7 +29,7 @@ app.post('/enviar-chamado', (req, res) => {
         hora: new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }) 
     };
     chamados.push(novoChamado);
-    res.status(200).json({ message: "Enviado!" });
+    res.status(200).json({ message: "OK" });
 });
 
 app.get('/obter-chamados', (req, res) => {
