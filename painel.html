@@ -2,42 +2,90 @@
 <html lang="pt-br">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <script src="https://tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cloudflare.com">
     <title>Painel Controlador - Fatias</title>
     <style>
-        body { background: #0a0a0a; color: white; font-family: sans-serif; }
-        .gold { color: #E6B952; }
-        .card-chamado { background: #1a1a1a; border-left: 4px solid #E6B952; animation: flash 1s infinite alternate; }
-        @keyframes flash { from { box-shadow: 0 0 5px #E6B952; } to { box-shadow: 0 0 15px #d32f2f; } }
+        @import url('https://googleapis.com');
+        :root { --gold: #E6B952; --dark: #0a0a0a; }
+        body { background-color: var(--dark); color: white; font-family: 'Montserrat', sans-serif; }
+        .gold-text { color: var(--gold); }
+        .card-chamado {
+            background: #1a1a1a;
+            border-left: 5px solid var(--gold);
+            animation: flash 1.5s infinite alternate;
+        }
+        @keyframes flash { 
+            from { box-shadow: 0 0 5px var(--gold); } 
+            to { box-shadow: 0 0 20px #d32f2f; border-color: #d32f2f; } 
+        }
+        .btn-ok { background: var(--gold); color: black; font-weight: bold; }
     </style>
 </head>
 <body class="p-6">
-    <h1 class="text-2xl font-bold mb-6 italic">PAINEL <span class="gold">CONTROLADOR</span></h1>
-    <div id="lista" class="space-y-4"></div>
-    <audio id="som" src="https://mixkit.co"></audio>
+
+    <header class="flex justify-between items-center mb-8 border-b border-gray-800 pb-4">
+        <div>
+            <h1 class="text-2xl font-black italic uppercase">Painel <span class="gold-text">Controlador</span></h1>
+            <p class="text-[10px] text-gray-500 tracking-[0.3em]">MONITORAMENTO EM TEMPO REAL</p>
+        </div>
+    </header>
+
+    <div id="container-chamados" class="space-y-4 max-w-4xl">
+        <!-- Chamados aparecem aqui -->
+        <p id="msg-vazio" class="text-gray-600 italic">Aguardando chamados...</p>
+    </div>
+
+    <audio id="som-alerta" src="https://mixkit.co"></audio>
 
     <script>
-        let totalAnterior = 0;
-        function atualizar() {
-            fetch('/obter-chamados').then(res => res.json()).then(dados => {
-                const lista = document.getElementById('lista');
-                lista.innerHTML = dados.length === 0 ? '<p class="text-gray-500">Nenhum chamado...</p>' : '';
-                
-                if(dados.length > totalAnterior) document.getElementById('som').play();
-                totalAnterior = dados.length;
+        let ultimoCount = 0;
 
-                dados.forEach(c => {
-                    const div = document.createElement('div');
-                    div.className = "card-chamado p-4 flex justify-between items-center rounded";
-                    div.innerHTML = `<div><b class="text-xl gold">MESA ${c.mesa}</b> - ${c.acao} <br><small>${c.hora}</small></div>
-                                     <button onclick="resolver(${c.id})" class="bg-[#E6B952] text-black px-4 py-2 rounded font-bold">OK</button>`;
-                    lista.appendChild(div);
+        function atualizarPainel() {
+            fetch('/obter-chamados')
+                .then(res => res.json())
+                .then(dados => {
+                    const container = document.getElementById('container-chamados');
+                    
+                    if (dados.length > ultimoCount) {
+                        document.getElementById('som-alerta').play();
+                        ultimoCount = dados.length;
+                    }
+
+                    if (dados.length === 0) {
+                        container.innerHTML = '<p class="text-gray-600 italic">Nenhum chamado pendente...</p>';
+                        ultimoCount = 0;
+                        return;
+                    }
+
+                    container.innerHTML = '';
+                    dados.forEach((c) => {
+                        const card = document.createElement('div');
+                        card.className = "card-chamado p-5 rounded-r-xl flex justify-between items-center mb-4";
+                        // Importante: Passamos o ID e a MESA para o servidor saber quem avisar
+                        card.innerHTML = `
+                            <div>
+                                <span class="text-2xl font-black gold-text italic">MESA ${c.mesa}</span>
+                                <p class="text-sm font-bold uppercase mt-1">${c.acao}</p>
+                                <small class="text-gray-500">${c.hora}</small>
+                            </div>
+                            <button onclick="resolver(${c.id}, '${c.mesa}')" class="btn-ok px-8 py-3 rounded-lg">
+                                OK
+                            </button>
+                        `;
+                        container.appendChild(card);
+                    });
                 });
-            });
         }
-        function resolver(id) { fetch('/resolver-chamado/'+id, {method:'DELETE'}).then(atualizar); }
-        setInterval(atualizar, 3000);
+
+        function resolver(id, mesa) { 
+            // Agora enviamos o ID do chamado e o número da MESA
+            fetch(`/resolver-chamado/${id}/${mesa}`, { method: 'DELETE' })
+                .then(() => atualizarPainel()); 
+        }
+
+        setInterval(atualizarPainel, 3000);
     </script>
 </body>
 </html>
