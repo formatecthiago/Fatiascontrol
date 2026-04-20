@@ -1,13 +1,77 @@
-// Coloque isso dentro do seu <script> no index.html
-setInterval(() => {
-    fetch(`/status-atendimento/${numeroMesa}`)
-        .then(res => res.json())
-        .then(dados => {
-            if (dados.atendido) {
-                // Efeito visual de retorno para o cliente
-                document.body.style.backgroundColor = "#27ae60"; // Fica verde por um momento
-                alert("O Gerente recebeu seu pedido! Um garçom está a caminho.");
-                setTimeout(() => { document.body.style.backgroundColor = "#0a0a0a"; }, 3000);
-            }
-        });
-}, 3000); // Verifica a cada 3 segundos
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <script src="https://tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cloudflare.com">
+    <title>Fatia's Control</title>
+    <style>
+        @import url('https://googleapis.com');
+        body { background: #0a0a0a; color: #E6B952; font-family: 'Montserrat', sans-serif; transition: background 0.5s; }
+        .btn-premium {
+            background: linear-gradient(145deg, #1a1a1a, #050505);
+            border: 1px solid rgba(230, 185, 82, 0.4);
+            border-radius: 20px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.6);
+        }
+        .btn-premium:active { background: #E6B952; color: #000; transform: scale(0.95); }
+    </style>
+</head>
+<body class="h-screen flex flex-col p-6 justify-between text-center">
+    <header>
+        <p class="text-[10px] tracking-[0.4em] text-gray-500 uppercase">Atendimento Digital</p>
+        <h1 class="text-4xl font-black italic">MESA <span id="num-mesa">--</span></h1>
+        <div class="h-1 w-full bg-[#E6B952] mt-2"></div>
+    </header>
+
+    <main class="grid grid-cols-2 gap-4">
+        <button onclick="enviar('Cardápio')" class="btn-premium h-32 flex flex-col items-center justify-center gap-2">
+            <i class="fas fa-utensils text-2xl"></i> <span class="text-[10px] uppercase font-bold">Cardápio</span>
+        </button>
+        <button onclick="enviar('Garçom')" class="btn-premium h-32 flex flex-col items-center justify-center gap-2">
+            <i class="fas fa-bell-concierge text-2xl"></i> <span class="text-[10px] uppercase font-bold">Garçom</span>
+        </button>
+        <button onclick="enviar('Wi-Fi')" class="btn-premium h-32 flex flex-col items-center justify-center gap-2">
+            <i class="fas fa-wifi text-2xl"></i> <span class="text-[10px] uppercase font-bold">Wi-Fi</span>
+        </button>
+        <button onclick="enviar('Conta')" class="btn-premium h-32 flex flex-col items-center justify-center gap-2">
+            <i class="fas fa-receipt text-2xl"></i> <span class="text-[10px] uppercase font-bold">Conta</span>
+        </button>
+    </main>
+
+    <footer class="flex gap-2">
+        <button onclick="minimizar()" class="flex-1 py-3 bg-gray-900 rounded-xl text-[10px] font-bold uppercase">Minimizar</button>
+        <button onclick="sair()" class="flex-1 py-3 bg-red-950/30 rounded-xl text-[10px] font-bold uppercase">Sair</button>
+    </footer>
+
+    <script>
+        const mesa = window.location.pathname.split('/').pop() || "0";
+        document.getElementById('num-mesa').innerText = mesa;
+
+        function enviar(acao) {
+            fetch('/enviar-chamado', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({ mesa, acao })
+            }).then(() => alert("Solicitação de " + acao + " enviada!"));
+        }
+
+        function sair() { if(confirm("Deseja sair?")) window.location.href="about:blank"; }
+        function minimizar() { document.documentElement.requestFullscreen ? document.exitFullscreen() : null; }
+
+        // CHECA RETORNO DO GERENTE
+        setInterval(() => {
+            fetch(`/status-atendimento/${mesa}`)
+                .then(res => res.json())
+                .then(dados => {
+                    if (dados.atendido) {
+                        document.body.style.background = "#064e3b"; // Verde escuro
+                        alert("✅ O gerente confirmou seu pedido!");
+                        setTimeout(() => { document.body.style.background = "#0a0a0a"; }, 5000);
+                    }
+                });
+        }, 4000);
+    </script>
+</body>
+</html>
