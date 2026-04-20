@@ -7,51 +7,49 @@ app.use(express.static(__dirname));
 
 const PORT = process.env.PORT || 3000;
 
-// Estado das 50 mesas (O que o gerente vê)
-let mesas = {}; 
+// Estado das 50 mesas
+let estadoMesas = {}; 
 for(let i=1; i<=50; i++) {
-    mesas[i] = { ativa: false, acao: '', qtd: 0, ok: false };
+    estadoMesas[i] = { ativa: false, acao: '', quantidade: 0, atendida: false };
 }
 
-// Rotas principais
-app.get('/mesa/:n', (req, res) => res.sendFile(path.join(__dirname, 'index.html')));
+// Entrega das Páginas
+app.get('/mesa/:numero', (req, res) => res.sendFile(path.join(__dirname, 'index.html')));
 app.get('/painel', (req, res) => res.sendFile(path.join(__dirname, 'painel.html')));
 
-// Receber chamado (O clique do celular)
+// Receber chamado
 app.post('/enviar-chamado', (req, res) => {
     const { mesa, acao } = req.body;
-    const n = parseInt(mesa);
-    if(mesas[n]) {
-        mesas[n].ativa = true;
-        mesas[n].ok = false;
-        mesas[n].acao = acao;
-        mesas[n].qtd += 1;
+    const m = parseInt(mesa);
+    if(estadoMesas[m]) {
+        estadoMesas[m].ativa = true;
+        estadoMesas[m].atendida = false;
+        estadoMesas[m].acao = acao;
+        estadoMesas[m].quantidade += 1;
     }
-    res.json({ status: "sucesso" });
+    res.status(200).json({ message: "OK" });
 });
 
-// Enviar estado para o Painel
-app.get('/obter-estado', (req, res) => res.json(mesas));
+app.get('/obter-estado-geral', (req, res) => res.json(estadoMesas));
 
-// Gerente dá OK
-app.post('/atender/:n', (req, res) => {
-    const n = parseInt(req.params.n);
-    if(mesas[n]) mesas[n].ok = true;
-    setTimeout(() => { if(mesas[n]) mesas[n].ok = false; }, 8000);
+app.post('/atender/:mesa', (req, res) => {
+    const m = parseInt(req.params.mesa);
+    if(estadoMesas[m]) estadoMesas[m].atendida = true;
+    setTimeout(() => { if(estadoMesas[m]) estadoMesas[m].atendida = false; }, 8000);
     res.send("OK");
 });
 
-// Gerente limpa a mesa
-app.post('/limpar/:n', (req, res) => {
-    const n = parseInt(req.params.n);
-    mesas[n] = { ativa: false, acao: '', qtd: 0, ok: false };
+app.post('/limpar/:mesa', (req, res) => {
+    const m = parseInt(req.params.mesa);
+    estadoMesas[m] = { ativa: false, acao: '', quantidade: 0, atendida: false };
     res.send("OK");
 });
 
-// Cliente checa retorno
-app.get('/status/:n', (req, res) => {
-    const n = parseInt(req.params.n);
-    res.json({ atendido: mesas[n]?.ok || false });
+app.get('/status-atendimento/:mesa', (req, res) => {
+    const m = parseInt(req.params.mesa);
+    res.json({ atendido: estadoMesas[m]?.atendida || false });
 });
 
-app.listen(PORT, () => console.log("Servidor Online"));
+app.get('/', (req, res) => res.sendFile(path.join(__dirname, 'index.html')));
+
+app.listen(PORT, () => console.log(`Servidor rodando na porta ${PORT}`));
