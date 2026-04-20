@@ -2,279 +2,42 @@
 <html lang="pt-br">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Painel de Gestão - Garçom Digital</title>
+    <script src="https://tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cloudflare.com">
+    <title>Painel Controlador - Fatias</title>
     <style>
-        :root {
-            --bg: #1a1a1a;
-            --card-bg: #2d2d2d;
-            --text: #e0e0e0;
-            --accent: #e74c3c;
-            --success: #2ecc71;
-            --warning: #f1c40f;
-            --info: #3498db;
-        }
-
-        body {
-            font-family: 'Segoe UI', sans-serif;
-            background: var(--bg);
-            color: var(--text);
-            margin: 0;
-            padding: 20px;
-            overflow-x: hidden;
-        }
-
-        header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding-bottom: 20px;
-            border-bottom: 1px solid #444;
-            margin-bottom: 30px;
-        }
-
-        h1 { margin: 0; font-size: 1.5rem; color: var(--info); }
-
-        .status-summary { font-size: 0.9rem; color: #888; }
-
-        .grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
-            gap: 12px;
-            max-width: 1200px;
-            margin: 0 auto;
-        }
-
-        .mesa {
-            aspect-ratio: 1;
-            background: var(--success);
-            color: white;
-            border-radius: 12px;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            cursor: pointer;
-            transition: all 0.2s;
-            position: relative;
-            border: 2px solid transparent;
-        }
-
-        .mesa .num { font-size: 1.5rem; font-weight: bold; }
-        .mesa .label { font-size: 0.6rem; margin-top: 4px; opacity: 0.9; text-transform: uppercase; }
-
-        .mesa.waiting {
-            background: var(--accent);
-            color: white;
-            animation: pulse 0.8s infinite;
-            border-color: white;
-            z-index: 10;
-        }
-
-        .mesa.acknowledged {
-            background: var(--card-bg);
-            color: var(--text);
-            border-color: var(--success);
-            opacity: 0.8;
-        }
-
-        .mesa.acknowledged::after {
-            content: "✔";
-            position: absolute;
-            top: 5px;
-            right: 5px;
-            color: var(--success);
-            font-size: 1.2rem;
-            font-weight: bold;
-        }
-
-        @keyframes pulse {
-            0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(231, 76, 60, 0.7); }
-            70% { transform: scale(1.05); box-shadow: 0 0 0 15px rgba(231, 76, 60, 0); }
-            100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(231, 76, 60, 0); }
-        }
-
-        /* Overlay de Alerta */
-        #alerta-sirene {
-            position: fixed;
-            top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(231, 76, 60, 0.95);
-            z-index: 1000;
-            display: none;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            text-align: center;
-            animation: flashBg 0.5s infinite;
-        }
-
-        @keyframes flashBg {
-            0% { background: rgba(231, 76, 60, 0.95); }
-            50% { background: rgba(0, 0, 0, 0.95); }
-        }
-
-        .sirene-content {
-            animation: bounce 0.5s infinite;
-        }
-
-        @keyframes bounce {
-            0%, 100% { transform: translateY(0) scale(1); }
-            50% { transform: translateY(-20px) scale(1.1); }
-        }
-
-        .btn-atender {
-            background: white;
-            color: var(--accent);
-            border: none;
-            padding: 20px 60px;
-            font-size: 1.2rem;
-            font-weight: bold;
-            border-radius: 50px;
-            cursor: pointer;
-            margin-top: 40px;
-            box-shadow: 0 10px 20px rgba(0,0,0,0.3);
-        }
-
-        .btn-atender:active { transform: scale(0.95); }
+        body { background: #0a0a0a; color: white; font-family: sans-serif; }
+        .gold { color: #E6B952; }
+        .card-chamado { background: #1a1a1a; border-left: 4px solid #E6B952; animation: flash 1s infinite alternate; }
+        @keyframes flash { from { box-shadow: 0 0 5px #E6B952; } to { box-shadow: 0 0 15px #d32f2f; } }
     </style>
 </head>
-<body>
-
-    <header>
-        <div>
-            <h1>Painel Operacional</h1>
-            <div class="status-summary" id="status-texto">Sistema Online - Aguardando chamadas</div>
-        </div>
-        <div style="font-size: 1.2rem;">🏪</div>
-    </header>
-
-    <div class="grid" id="grid-mesas"></div>
-
-    <div id="alerta-sirene">
-        <div class="sirene-content">
-            <div style="font-size: 120px;">🚨</div>
-            <h1 style="font-size: 3rem; color: white; margin: 20px 0;">NOVA CHAMADA!</h1>
-            <p id="mesas-chamando" style="font-size: 1.5rem; color: white;"></p>
-        </div>
-        <button class="btn-atender" onclick="fecharAlerta()">VER PAINEL</button>
-    </div>
+<body class="p-6">
+    <h1 class="text-2xl font-bold mb-6 italic">PAINEL <span class="gold">CONTROLADOR</span></h1>
+    <div id="lista" class="space-y-4"></div>
+    <audio id="som" src="https://mixkit.co"></audio>
 
     <script>
-        let audioCtx = null;
-        let sireneAtiva = false;
-        let lastTimestamps = {};
+        let totalAnterior = 0;
+        function atualizar() {
+            fetch('/obter-chamados').then(res => res.json()).then(dados => {
+                const lista = document.getElementById('lista');
+                lista.innerHTML = dados.length === 0 ? '<p class="text-gray-500">Nenhum chamado...</p>' : '';
+                
+                if(dados.length > totalAnterior) document.getElementById('som').play();
+                totalAnterior = dados.length;
 
-        function initAudio() {
-            if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-        }
-
-        function playAlertSound() {
-            initAudio();
-            const now = audioCtx.currentTime;
-            const osc = audioCtx.createOscillator();
-            const gain = audioCtx.createGain();
-            
-            osc.type = 'sawtooth';
-            osc.frequency.setValueAtTime(440, now);
-            osc.frequency.linearRampToValueAtTime(880, now + 0.2);
-            osc.frequency.linearRampToValueAtTime(440, now + 0.4);
-            
-            gain.gain.setValueAtTime(0.1, now);
-            gain.gain.exponentialRampToValueAtTime(0.01, now + 0.4);
-            
-            osc.connect(gain);
-            gain.connect(audioCtx.destination);
-            
-            osc.start(now);
-            osc.stop(now + 0.4);
-        }
-
-        function vibrate() {
-            if ("vibrate" in navigator) {
-                navigator.vibrate([500, 200, 500, 200, 500]);
-            }
-        }
-
-        // Gerar 50 mesas
-        const grid = document.getElementById('grid-mesas');
-        for(let i=1; i<=50; i++) {
-            const div = document.createElement('div');
-            div.className = 'mesa';
-            div.id = 'mesa-' + i;
-            div.innerHTML = `<span class="num">${i}</span><span class="label">Mesa</span>`;
-            div.onclick = () => atenderMesa(i);
-            grid.appendChild(div);
-        }
-
-        function atenderMesa(n) {
-            const mesaDiv = document.getElementById('mesa-' + n);
-            if (mesaDiv.classList.contains('waiting')) {
-                fetch('/api/state', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ mesa: String(n), origem: 'painel', mensagem: "O garçom está a caminho!" })
-                }).then(() => carregarDados());
-            } else if (mesaDiv.classList.contains('acknowledged')) {
-                fetch('/api/state', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ mesa: String(n), origem: 'clear' })
-                }).then(() => carregarDados());
-            }
-        }
-
-        function fecharAlerta() {
-            document.getElementById('alerta-sirene').style.display = 'none';
-            sireneAtiva = false;
-        }
-
-        function carregarDados() {
-            fetch('/api/state')
-                .then(r => r.json())
-                .then(state => {
-                    let novasChamadas = [];
-                    let totalWaiting = 0;
-
-                    for (let i = 1; i <= 50; i++) {
-                        const mesaData = state[String(i)];
-                        const mesaDiv = document.getElementById('mesa-' + i);
-                        
-                        if (mesaData) {
-                            if (mesaData.status === 'waiting') {
-                                totalWaiting++;
-                                mesaDiv.className = 'mesa waiting';
-                                if (!lastTimestamps[i] || mesaData.timestamp > lastTimestamps[i]) {
-                                    novasChamadas.push(i);
-                                    lastTimestamps[i] = mesaData.timestamp;
-                                }
-                            } else if (mesaData.status === 'acknowledged') {
-                                mesaDiv.className = 'mesa acknowledged';
-                            } else {
-                                mesaDiv.className = 'mesa';
-                            }
-                        } else {
-                            mesaDiv.className = 'mesa';
-                        }
-                    }
-
-                    if (novasChamadas.length > 0 && !sireneAtiva) {
-                        sireneAtiva = true;
-                        document.getElementById('alerta-sirene').style.display = 'flex';
-                        document.getElementById('mesas-chamando').innerText = "MESAS: " + novasChamadas.join(', ');
-                        vibrate();
-                        const interval = setInterval(() => {
-                            if (!sireneAtiva) { clearInterval(interval); return; }
-                            playAlertSound();
-                        }, 600);
-                    }
-
-                    document.getElementById('status-texto').innerText = totalWaiting > 0 ? 
-                        `${totalWaiting} mesa(s) aguardando atendimento` : 
-                        "Sistema Online - Nenhuma chamada pendente";
+                dados.forEach(c => {
+                    const div = document.createElement('div');
+                    div.className = "card-chamado p-4 flex justify-between items-center rounded";
+                    div.innerHTML = `<div><b class="text-xl gold">MESA ${c.mesa}</b> - ${c.acao} <br><small>${c.hora}</small></div>
+                                     <button onclick="resolver(${c.id})" class="bg-[#E6B952] text-black px-4 py-2 rounded font-bold">OK</button>`;
+                    lista.appendChild(div);
                 });
+            });
         }
-
-        setInterval(carregarDados, 3000);
+        function resolver(id) { fetch('/resolver-chamado/'+id, {method:'DELETE'}).then(atualizar); }
+        setInterval(atualizar, 3000);
     </script>
 </body>
 </html>
