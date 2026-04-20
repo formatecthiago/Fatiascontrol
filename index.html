@@ -14,15 +14,15 @@
 </head>
 <body class="h-screen flex flex-col p-6 justify-between text-center">
     <header>
-        <p class="text-[10px] text-gray-500 uppercase">MESA</p>
-        <h1 id="num-mesa" class="text-4xl font-black italic">--</h1>
+        <p class="text-[10px] text-gray-500 uppercase font-bold">MESA</p>
+        <h1 id="num-mesa" class="text-5xl font-black italic">--</h1>
     </header>
 
     <main class="grid grid-cols-2 gap-4">
-        <button onclick="enviar('Cardápio')" class="btn-p h-32 flex flex-col items-center justify-center gap-2"><b>Cardápio</b></button>
-        <button onclick="enviar('Garçom')" class="btn-p h-32 flex flex-col items-center justify-center gap-2"><b>Garçom</b></button>
-        <button onclick="enviar('Wi-Fi')" class="btn-p h-32 flex flex-col items-center justify-center gap-2"><b>Wi-Fi</b></button>
-        <button onclick="enviar('Conta')" class="btn-p h-32 flex flex-col items-center justify-center gap-2"><b>Conta</b></button>
+        <button onclick="enviar('Cardápio')" class="btn-p h-32 flex flex-col items-center justify-center"><b>CARDÁPIO</b></button>
+        <button onclick="enviar('Garçom')" class="btn-p h-32 flex flex-col items-center justify-center"><b>GARÇOM</b></button>
+        <button onclick="enviar('Wi-Fi')" class="btn-p h-32 flex flex-col items-center justify-center"><b>WI-FI</b></button>
+        <button onclick="enviar('Conta')" class="btn-p h-32 flex flex-col items-center justify-center"><b>CONTA</b></button>
     </main>
 
     <script>
@@ -35,8 +35,11 @@
             fetch('/enviar-chamado', {
                 method: 'POST',
                 headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify({ mesa, acao })
-            }).then(() => alert("Enviado!"));
+                body: JSON.stringify({ mesa: mesa, acao: acao })
+            })
+            .then(res => res.json())
+            .then(data => console.log("Resposta:", data))
+            .catch(err => console.error("Erro no envio:", err));
         }
 
         setInterval(() => {
@@ -46,10 +49,10 @@
                     if (dados.atendido) {
                         somSuave.play().catch(()=>{});
                         document.body.style.background = "#064e3b";
-                        setTimeout(() => { document.body.style.background = "#0a0a0a"; }, 5000);
+                        setTimeout(() => { document.body.style.background = "#0a0a0a"; }, 6000);
                     }
                 });
-        }, 4000);
+        }, 3000);
     </script>
 </body>
 </html>
