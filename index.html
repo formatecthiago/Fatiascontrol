@@ -5,74 +5,56 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <script src="https://tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cloudflare.com">
-    <title>Fatia's - Cliente</title>
+    <title>Fatia's Control</title>
     <style>
         @import url('https://googleapis.com');
-        :root { --gold: #E6B952; --dark: #0a0a0a; }
-        body { background-color: var(--dark); color: var(--gold); font-family: 'Montserrat', sans-serif; height: 100vh; margin: 0; overflow: hidden; }
-        .btn-main { background: linear-gradient(145deg, #1a1a1a, #050505); border: 1px solid rgba(230, 185, 82, 0.4); border-radius: 20px; transition: all 0.15s ease; box-shadow: 0 4px 15px rgba(0,0,0,0.6); }
-        .btn-main:active { transform: scale(0.95); background: var(--gold); }
-        .btn-main:active i, .btn-main:active span { color: #000; }
-        .btn-system { background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(230, 185, 82, 0.2); border-radius: 12px; padding: 12px; color: #888; font-size: 0.65rem; font-weight: 700; text-transform: uppercase; }
-        #setup-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: var(--dark); z-index: 9999; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+        body { background: #0a0a0a; color: #E6B952; font-family: 'Montserrat', sans-serif; }
+        .btn-premium {
+            background: linear-gradient(145deg, #1a1a1a, #050505);
+            border: 1px solid rgba(230, 185, 82, 0.4);
+            border-radius: 20px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.6);
+        }
+        .btn-premium:active { background: #E6B952; color: #000; transform: scale(0.95); }
     </style>
 </head>
-<body class="flex flex-col">
-    <div id="setup-overlay" onclick="ativarControle()">
-        <div class="px-8 py-4 border-2 border-[#E6B952] rounded-full animate-pulse text-[#E6B952] font-bold tracking-widest text-sm">TOQUE PARA INICIAR</div>
-    </div>
+<body class="h-screen flex flex-col p-6 justify-between text-center">
+    <header>
+        <p class="text-[10px] tracking-[0.4em] text-gray-500 uppercase">Atendimento</p>
+        <h1 class="text-4xl font-black italic">MESA <span id="num-mesa">--</span></h1>
+        <div class="h-1 w-full bg-[#E6B952] mt-2"></div>
+    </header>
 
-    <div class="flex-grow flex flex-col justify-between p-6 h-screen">
-        <header class="text-center pt-4">
-            <p class="text-[10px] uppercase tracking-[0.4em] text-gray-400 font-bold">Atendimento Digital</p>
-            <div class="text-4xl font-black italic tracking-tighter text-white">MESA <span id="num-mesa" class="text-[#E6B952]">--</span></div>
-            <div class="h-[3px] w-full bg-[#E6B952] mt-1"></div>
-        </header>
+    <main class="grid grid-cols-2 gap-4">
+        <button onclick="enviar('Cardápio')" class="btn-premium h-32 flex flex-col items-center justify-center gap-2">
+            <i class="fas fa-utensils text-2xl"></i> <span class="text-[10px] uppercase font-bold">Cardápio</span>
+        </button>
+        <button onclick="enviar('Garçom')" class="btn-premium h-32 flex flex-col items-center justify-center gap-2">
+            <i class="fas fa-bell-concierge text-2xl"></i> <span class="text-[10px] uppercase font-bold">Garçom</span>
+        </button>
+        <button onclick="enviar('Wi-Fi')" class="btn-premium h-32 flex flex-col items-center justify-center gap-2">
+            <i class="fas fa-wifi text-2xl"></i> <span class="text-[10px] uppercase font-bold">Wi-Fi</span>
+        </button>
+        <button onclick="enviar('Conta')" class="btn-premium h-32 flex flex-col items-center justify-center gap-2">
+            <i class="fas fa-receipt text-2xl"></i> <span class="text-[10px] uppercase font-bold">Conta</span>
+        </button>
+    </main>
 
-        <main class="grid grid-cols-2 gap-4 max-w-sm mx-auto w-full px-2">
-            <button onclick="enviar('Cardápio')" class="btn-main h-32 flex flex-col items-center justify-center gap-3">
-                <i class="fas fa-utensils text-2xl"></i><span class="font-bold text-[11px] uppercase">Cardápio</span>
-            </button>
-            <button onclick="enviar('Garçom')" class="btn-main h-32 flex flex-col items-center justify-center gap-3">
-                <i class="fas fa-bell-concierge text-2xl"></i><span class="font-bold text-[11px] uppercase">Garçom</span>
-            </button>
-            <button onclick="enviar('Wi-Fi')" class="btn-main h-32 flex flex-col items-center justify-center gap-3">
-                <i class="fas fa-wifi text-2xl"></i><span class="font-bold text-[11px] uppercase">Wi-Fi</span>
-            </button>
-            <button onclick="enviar('Conta')" class="btn-main h-32 flex flex-col items-center justify-center gap-3">
-                <i class="fas fa-receipt text-2xl"></i><span class="font-bold text-[11px] uppercase">Conta</span>
-            </button>
-        </main>
-
-        <footer class="grid grid-cols-2 gap-3 max-w-sm mx-auto w-full pb-4">
-            <button class="btn-system" onclick="minimizar()">Minimizar</button>
-            <button class="btn-system bg-red-900/20" onclick="sair()">Sair</button>
-        </footer>
-    </div>
+    <footer class="flex gap-2">
+        <button onclick="window.location.reload()" class="flex-1 py-3 bg-gray-900 rounded-xl text-[10px] font-bold uppercase">Reiniciar</button>
+        <button onclick="confirm('Sair?') ? window.close() : null" class="flex-1 py-3 bg-red-950/30 rounded-xl text-[10px] font-bold uppercase">Sair</button>
+    </footer>
 
     <script>
         const mesa = window.location.pathname.split('/').pop() || "0";
         document.getElementById('num-mesa').innerText = mesa;
 
         function enviar(acao) {
-            if (navigator.vibrate) navigator.vibrate(50);
             fetch('/enviar-chamado', {
                 method: 'POST',
                 headers: {'Content-Type': 'application/json'},
                 body: JSON.stringify({ mesa, acao })
-            }).then(() => alert("Solicitação enviada!"));
-        }
-
-        function ativarControle() { 
-            document.documentElement.requestFullscreen().catch(()=>{});
-            document.getElementById('setup-overlay').style.display = 'none'; 
-        }
-        function minimizar() { 
-            if(document.exitFullscreen) document.exitFullscreen();
-            document.getElementById('setup-overlay').style.display = 'flex';
-        }
-        function sair() { 
-            if(confirm("Deseja encerrar?")) window.location.href = "about:blank"; 
+            }).then(() => alert("Solicitação de " + acao + " enviada!"));
         }
     </script>
 </body>
