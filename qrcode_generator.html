@@ -1,42 +1,23 @@
-
 <!DOCTYPE html>
 <html lang="pt-br">
 <head>
-    <meta charset="UTF-8">
-    <title>Gerador de QR Codes - Cliente Control</title>
-    <!-- Biblioteca para gerar o QR Code -->
     <script src="https://cloudflare.com"></script>
     <style>
-        body { font-family: sans-serif; text-align: center; }
-        .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 20px; padding: 20px; }
-        .mesa-card { border: 1px solid #ccc; padding: 10px; border-radius: 8px; }
-        .qrcode { margin: 10px auto; width: 128px; height: 128px; }
-        h2 { color: #d32f2f; }
+        .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 20px; text-align: center; }
+        .card { border: 1px solid #ccc; padding: 10px; }
     </style>
 </head>
 <body>
-    <h2>Gerador de QR Codes - 50 Mesas</h2>
-    <p>URL Base: <strong id="url-display"></strong></p>
-    
-    <div id="grid-mesas" class="grid"></div>
+    <h2>Gerador Fatias Control</h2>
+    <div id="grid" class="grid"></div>
     <script>
-        // MUDANÇA IMPORTANTE: Substitua pelo seu link real do Render
-        const URL_BASE = window.location.origin; 
-        document.getElementById('url-display').innerText = URL_BASE;
-        const grid = document.getElementById('grid-mesas');
-        // Gera as 50 mesas
-        for (let i = 1; i <= 50; i++) {
-            // Cria o container da mesa
-            const card = document.createElement('div');
-            card.className = 'mesa-card';
-            card.innerHTML = `<h3>Mesa ${i}</h3><div id="qrcode-${i}" class="qrcode"></div>`;
-            grid.appendChild(card);
-            // Gera o QR Code apontando para a rota /mesa/:numero
-            new QRCode(document.getElementById(`qrcode-${i}`), {
-                text: `${URL_BASE}/mesa/${i}`,
-                width: 128,
-                height: 128
-            });
+        const base = window.location.origin;
+        for(let i=1; i<=50; i++) {
+            const div = document.createElement('div');
+            div.className = 'card';
+            div.innerHTML = `Mesa ${i}<div id="q${i}"></div>`;
+            document.getElementById('grid').appendChild(div);
+            new QRCode(document.getElementById(`q${i}`), { text: `${base}/mesa/${i}`, width: 128, height: 128 });
         }
     </script>
 </body>
