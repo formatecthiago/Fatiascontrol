@@ -1,27 +1,48 @@
-<script>
-    let cliquesAntigos = 0;
-    const somForte = new Audio('/alerta.mp3');
-
-    function atualizar() {
-        fetch('/obter-estado').then(r => r.json()).then(dados => {
-            const grid = document.getElementById('grid');
-            grid.innerHTML = '';
-            let cliquesAgora = 0;
-
-            for(let i=1; i<=50; i++) {
-                const m = dados[i];
-                cliquesAgora += m.qtd;
-                const card = document.createElement('div');
-                card.className = `mesa-card ${m.ativa ? 'ativa' : ''}`;
-                // ... (restante do visual dos quadrados igual antes) ...
-                grid.appendChild(card);
-            }
-
-            if(cliquesAgora > cliquesAntigos) {
-                somForte.play().catch(()=>{});
-                cliquesAntigos = cliquesAgora;
-            }
-        });
-    }
-    // ... (funções atender e limpar usando as rotas /atender/ e /limpar/) ...
-</script>
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <script src="https://tailwindcss.com"></script>
+    <title>Mapa Fatias</title>
+    <style>
+        body { background: #000; color: #fff; font-family: sans-serif; }
+        .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(90px, 1fr)); gap: 8px; }
+        .m { background: #111; border: 1px solid #222; height: 110px; border-radius: 8px; transition: 0.3s; }
+        .ativa { background: #b91c1c !important; animation: pulse 1s infinite; }
+        @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.5; } 100% { opacity: 1; } }
+    </style>
+</head>
+<body class="p-4">
+    <h1 class="text-xl font-bold mb-4 uppercase">MAPA <span style="color:#E6B952">Fatias Control</span></h1>
+    <div id="grid" class="grid"></div>
+    <audio id="som" src="/alerta.mp3"></audio>
+    <script>
+        let ultimoTotal = 0;
+        const som = document.getElementById('som');
+        function atualizar() {
+            fetch('/obter-estado-geral').then(res => res.json()).then(mesas => {
+                const grid = document.getElementById('grid');
+                grid.innerHTML = '';
+                let totalAgora = 0;
+                for(let i=1; i<=50; i++) {
+                    const m = mesas[i];
+                    totalAgora += m.quantidade;
+                    const div = document.createElement('div');
+                    div.className = `m p-2 flex flex-col items-center justify-between ${m.ativa ? 'ativa' : ''}`;
+                    div.innerHTML = `
+                        <span class="text-[10px] font-bold">MESA ${i}</span>
+                        ${m.ativa ? `<span class="text-[8px] uppercase text-center">${m.acao}<br>(${m.quantidade}x)</span>
+                        <div class="flex gap-1 w-full"><button onclick="atender(${i})" class="bg-green-600 text-[8px] flex-1 p-1 rounded font-bold">OK</button>
+                        <button onclick="limpar(${i})" class="bg-black text-[8px] flex-1 p-1 rounded border border-gray-600">X</button></div>` : ''} `;
+                    grid.appendChild(div);
+                }
+                if(totalAgora > ultimoTotal) { som.play().catch(()=>{}); ultimoTotal = totalAgora; }
+            });
+        }
+        function atender(n) { fetch('/atender/'+n, {method:'POST'}).then(atualizar); }
+        function limpar(n) { fetch('/limpar/'+n, {method:'POST'}).then(atualizar); }
+        setInterval(atualizar, 3000);
+        atualizar();
+    </script>
+</body>
+</html>
