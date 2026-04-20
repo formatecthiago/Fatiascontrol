@@ -2,62 +2,74 @@
 <html lang="pt-br">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <script src="https://tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cloudflare.com">
-    <title>Painel Controlador - Fatias</title>
+    <title>Mapa de Mesas - Fatias</title>
     <style>
         @import url('https://googleapis.com');
-        body { background: #0a0a0a; color: white; font-family: 'Montserrat', sans-serif; }
-        .gold { color: #E6B952; }
-        .card-alerta { 
-            background: #1a1a1a; border-left: 5px solid #E6B952; 
-            animation: pulse 1.5s infinite alternate;
-        }
-        @keyframes pulse { from { box-shadow: 0 0 5px #E6B952; } to { box-shadow: 0 0 20px #d32f2f; } }
+        body { background: #050505; color: white; font-family: 'Montserrat', sans-serif; }
+        .grid-mesas { display: grid; grid-template-columns: repeat(auto-fill, minmax(110px, 1fr)); gap: 10px; }
+        .mesa-box { background: #111; border: 1px solid #222; transition: all 0.3s; position: relative; }
+        .mesa-ativa { background: #d32f2f !important; border-color: #ff4444; animation: pulse 1s infinite alternate; }
+        @keyframes pulse { from { opacity: 1; } to { opacity: 0.7; } }
+        .btn-acao { font-size: 10px; padding: 5px; border-radius: 4px; text-transform: uppercase; font-weight: 900; }
     </style>
 </head>
-<body class="p-6">
-    <h1 class="text-2xl font-black italic mb-8 uppercase">Painel <span class="gold">Controlador</span></h1>
-    <div id="lista" class="space-y-4"></div>
+<body class="p-4">
+    <header class="flex justify-between items-center mb-6">
+        <h1 class="text-xl font-black italic uppercase">MAPA <span class="text-[#E6B952]">Fatias Control</span></h1>
+        <div id="status" class="text-[10px] text-green-500 font-bold">SISTEMA ONLINE</div>
+    </header>
     
+    <div id="grid" class="grid-mesas"></div>
+    <audio id="som" src="/alerta.mp3"></audio>
+
     <script>
-        let ultimoCount = 0;
-        const somForte = new Audio('/alerta.mp3');
+        let totalCliquesPassado = 0;
+        const som = document.getElementById('som');
 
         function atualizar() {
-            fetch('/obter-chamados').then(res => res.json()).then(dados => {
-                const lista = document.getElementById('lista');
-                
-                if(dados.length > ultimoCount) {
-                    somForte.play().catch(()=>{});
-                    if (navigator.vibrate) navigator.vibrate([200, 100, 200]);
-                    ultimoCount = dados.length;
-                }
-                
-                if(dados.length === 0) {
-                    lista.innerHTML = '<p class="text-gray-600 italic">Aguardando chamados...</p>';
-                    ultimoCount = 0;
-                    return;
+            fetch('/obter-estado-geral').then(res => res.json()).then(mesas => {
+                const grid = document.getElementById('grid');
+                grid.innerHTML = '';
+                let totalCliquesAgora = 0;
+
+                for(let i=1; i<=50; i++) {
+                    const m = mesas[i];
+                    totalCliquesAgora += m.quantidade;
+                    
+                    const div = document.createElement('div');
+                    div.className = `mesa-box p-2 rounded-lg flex flex-col items-center justify-between h-32 ${m.ativa ? 'mesa-ativa' : ''}`;
+                    
+                    div.innerHTML = `
+                        <div class="text-[10px] opacity-50 uppercase">Mesa</div>
+                        <div class="text-3xl font-black">${i}</div>
+                        ${m.ativa ? `
+                            <div class="text-[9px] leading-tight font-bold text-center bg-black/40 p-1 rounded w-full">
+                                ${m.acao} (${m.quantidade}x)
+                            </div>
+                            <div class="flex gap-1 w-full mt-1">
+                                <button onclick="atender(${i})" class="btn-acao bg-green-600 flex-1">OK</button>
+                                <button onclick="limpar(${i})" class="btn-acao bg-black flex-1 border border-white/20"><i class="fas fa-trash"></i></button>
+                            </div>
+                        ` : '<div class="text-[9px] text-gray-700 font-bold uppercase mt-2">Livre</div>'}
+                    `;
+                    grid.appendChild(div);
                 }
 
-                lista.innerHTML = '';
-                dados.forEach(c => {
-                    const div = document.createElement('div');
-                    div.className = "card-alerta p-5 flex justify-between items-center rounded-xl mb-4";
-                    div.innerHTML = `
-                        <div><b class="text-2xl gold italic uppercase tracking-tighter">Mesa ${c.mesa}</b><br><span class="text-sm uppercase font-bold text-white">${c.acao}</span></div>
-                        <button onclick="resolver(${c.id}, '${c.mesa}')" class="bg-[#E6B952] text-black px-8 py-3 rounded-lg font-bold uppercase text-xs">Atender</button>
-                    `;
-                    lista.appendChild(div);
-                });
+                if(totalCliquesAgora > totalCliquesPassado) {
+                    som.play().catch(()=>{});
+                    totalCliquesPassado = totalCliquesAgora;
+                }
             });
         }
 
-        function resolver(id, mesa) {
-            fetch(`/resolver-chamado/${id}/${mesa}`, { method: 'DELETE' }).then(atualizar);
-        }
+        function atender(n) { fetch('/atender/'+n, {method:'POST'}).then(atualizar); }
+        function limpar(n) { fetch('/limpar/'+n, {method:'POST'}).then(atualizar); }
 
         setInterval(atualizar, 3000);
+        atualizar(); // Carga inicial
     </script>
 </body>
 </html>
