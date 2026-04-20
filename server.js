@@ -7,7 +7,6 @@ app.use(express.static(__dirname));
 
 const PORT = process.env.PORT || 3000;
 
-// Estado inicial: todas as 50 mesas começam livres
 let estadoMesas = {}; 
 for(let i=1; i<=50; i++) {
     estadoMesas[i] = { ativa: false, acao: '', quantidade: 0, atendida: false };
@@ -32,8 +31,10 @@ app.get('/obter-estado-geral', (req, res) => res.json(estadoMesas));
 
 app.post('/atender/:mesa', (req, res) => {
     const m = parseInt(req.params.mesa);
-    if(estadoMesas[m]) estadoMesas[m].atendida = true;
-    // O aviso no celular do cliente dura 8 segundos
+    if(estadoMesas[m]) {
+        estadoMesas[m].atendida = true;
+        estadoMesas[m].ativa = false; 
+    }
     setTimeout(() => { if(estadoMesas[m]) estadoMesas[m].atendida = false; }, 8000);
     res.send("OK");
 });
