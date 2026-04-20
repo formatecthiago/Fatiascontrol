@@ -4,35 +4,25 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <script src="https://tailwindcss.com"></script>
-    <link rel="stylesheet" href="https://cloudflare.com">
     <title>Fatia's Control</title>
     <style>
         @import url('https://googleapis.com');
-        body { background: #0a0a0a; color: #E6B952; font-family: 'Montserrat', sans-serif; transition: background 0.5s; }
-        .btn-premium { background: linear-gradient(145deg, #1a1a1a, #050505); border: 1px solid rgba(230, 185, 82, 0.4); border-radius: 20px; }
-        .btn-premium:active { background: #E6B952; color: #000; transform: scale(0.95); }
+        body { background: #0a0a0a; color: #E6B952; font-family: 'Montserrat', sans-serif; transition: 0.5s; }
+        .btn-p { background: linear-gradient(145deg, #1a1a1a, #050505); border: 1px solid #E6B95244; border-radius: 20px; }
+        .btn-p:active { background: #E6B952; color: #000; }
     </style>
 </head>
 <body class="h-screen flex flex-col p-6 justify-between text-center">
     <header>
-        <p class="text-[10px] tracking-[0.4em] text-gray-500 uppercase">Atendimento</p>
-        <h1 class="text-4xl font-black italic">MESA <span id="num-mesa">--</span></h1>
-        <div class="h-1 w-full bg-[#E6B952] mt-2"></div>
+        <p class="text-[10px] text-gray-500 uppercase">MESA</p>
+        <h1 id="num-mesa" class="text-4xl font-black italic">--</h1>
     </header>
 
     <main class="grid grid-cols-2 gap-4">
-        <button onclick="enviar('Cardápio')" class="btn-premium h-32 flex flex-col items-center justify-center gap-2">
-            <i class="fas fa-utensils text-2xl"></i> <span class="text-[10px] uppercase">Cardápio</span>
-        </button>
-        <button onclick="enviar('Garçom')" class="btn-premium h-32 flex flex-col items-center justify-center gap-2">
-            <i class="fas fa-bell-concierge text-2xl"></i> <span class="text-[10px] uppercase">Garçom</span>
-        </button>
-        <button onclick="enviar('Wi-Fi')" class="btn-premium h-32 flex flex-col items-center justify-center gap-2">
-            <i class="fas fa-wifi text-2xl"></i> <span class="text-[10px] uppercase">Wi-Fi</span>
-        </button>
-        <button onclick="enviar('Conta')" class="btn-premium h-32 flex flex-col items-center justify-center gap-2">
-            <i class="fas fa-receipt text-2xl"></i> <span class="text-[10px] uppercase">Conta</span>
-        </button>
+        <button onclick="enviar('Cardápio')" class="btn-p h-32 flex flex-col items-center justify-center gap-2"><b>Cardápio</b></button>
+        <button onclick="enviar('Garçom')" class="btn-p h-32 flex flex-col items-center justify-center gap-2"><b>Garçom</b></button>
+        <button onclick="enviar('Wi-Fi')" class="btn-p h-32 flex flex-col items-center justify-center gap-2"><b>Wi-Fi</b></button>
+        <button onclick="enviar('Conta')" class="btn-p h-32 flex flex-col items-center justify-center gap-2"><b>Conta</b></button>
     </main>
 
     <script>
@@ -41,7 +31,7 @@
         const somSuave = new Audio('/suave.mp3');
 
         function enviar(acao) {
-            if (navigator.vibrate) navigator.vibrate(100); 
+            if (navigator.vibrate) navigator.vibrate(100);
             fetch('/enviar-chamado', {
                 method: 'POST',
                 headers: {'Content-Type': 'application/json'},
@@ -55,9 +45,8 @@
                 .then(dados => {
                     if (dados.atendido) {
                         somSuave.play().catch(()=>{});
-                        document.body.style.background = "#064e3b"; 
-                        alert("✅ Atendimento Confirmado!");
-                        setTimeout(() => { document.body.style.background = "#0a0a0a"; }, 8000);
+                        document.body.style.background = "#064e3b";
+                        setTimeout(() => { document.body.style.background = "#0a0a0a"; }, 5000);
                     }
                 });
         }, 4000);
