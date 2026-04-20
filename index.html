@@ -9,41 +9,31 @@
     <style>
         @import url('https://googleapis.com');
         body { background: #0a0a0a; color: #E6B952; font-family: 'Montserrat', sans-serif; transition: background 0.5s; }
-        .btn-premium {
-            background: linear-gradient(145deg, #1a1a1a, #050505);
-            border: 1px solid rgba(230, 185, 82, 0.4);
-            border-radius: 20px;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.6);
-        }
+        .btn-premium { background: linear-gradient(145deg, #1a1a1a, #050505); border: 1px solid rgba(230, 185, 82, 0.4); border-radius: 20px; }
         .btn-premium:active { background: #E6B952; color: #000; transform: scale(0.95); }
     </style>
 </head>
 <body class="h-screen flex flex-col p-6 justify-between text-center">
     <header>
-        <p class="text-[10px] tracking-[0.4em] text-gray-500 uppercase">Atendimento Digital</p>
+        <p class="text-[10px] tracking-[0.4em] text-gray-500 uppercase">Atendimento</p>
         <h1 class="text-4xl font-black italic">MESA <span id="num-mesa">--</span></h1>
         <div class="h-1 w-full bg-[#E6B952] mt-2"></div>
     </header>
 
     <main class="grid grid-cols-2 gap-4">
         <button onclick="enviar('Cardápio')" class="btn-premium h-32 flex flex-col items-center justify-center gap-2">
-            <i class="fas fa-utensils text-2xl"></i> <span class="text-[10px] uppercase font-bold">Cardápio</span>
+            <i class="fas fa-utensils text-2xl"></i> <span class="text-[10px] uppercase">Cardápio</span>
         </button>
         <button onclick="enviar('Garçom')" class="btn-premium h-32 flex flex-col items-center justify-center gap-2">
-            <i class="fas fa-bell-concierge text-2xl"></i> <span class="text-[10px] uppercase font-bold">Garçom</span>
+            <i class="fas fa-bell-concierge text-2xl"></i> <span class="text-[10px] uppercase">Garçom</span>
         </button>
         <button onclick="enviar('Wi-Fi')" class="btn-premium h-32 flex flex-col items-center justify-center gap-2">
-            <i class="fas fa-wifi text-2xl"></i> <span class="text-[10px] uppercase font-bold">Wi-Fi</span>
+            <i class="fas fa-wifi text-2xl"></i> <span class="text-[10px] uppercase">Wi-Fi</span>
         </button>
         <button onclick="enviar('Conta')" class="btn-premium h-32 flex flex-col items-center justify-center gap-2">
-            <i class="fas fa-receipt text-2xl"></i> <span class="text-[10px] uppercase font-bold">Conta</span>
+            <i class="fas fa-receipt text-2xl"></i> <span class="text-[10px] uppercase">Conta</span>
         </button>
     </main>
-
-    <footer class="flex gap-2">
-        <button onclick="location.reload()" class="flex-1 py-3 bg-gray-900 rounded-xl text-[10px] font-bold uppercase">Reiniciar</button>
-        <button onclick="confirm('Sair?') ? window.close() : null" class="flex-1 py-3 bg-red-950/30 rounded-xl text-[10px] font-bold uppercase">Sair</button>
-    </footer>
 
     <script>
         const mesa = window.location.pathname.split('/').pop() || "0";
@@ -56,7 +46,7 @@
                 method: 'POST',
                 headers: {'Content-Type': 'application/json'},
                 body: JSON.stringify({ mesa, acao })
-            }).then(() => alert("Solicitação enviada!"));
+            }).then(() => alert("Enviado!"));
         }
 
         setInterval(() => {
@@ -65,10 +55,9 @@
                 .then(dados => {
                     if (dados.atendido) {
                         somSuave.play().catch(()=>{});
-                        if (navigator.vibrate) navigator.vibrate([100, 50, 100]);
                         document.body.style.background = "#064e3b"; 
                         alert("✅ Atendimento Confirmado!");
-                        setTimeout(() => { document.body.style.background = "#0a0a0a"; }, 5000);
+                        setTimeout(() => { document.body.style.background = "#0a0a0a"; }, 8000);
                     }
                 });
         }, 4000);
