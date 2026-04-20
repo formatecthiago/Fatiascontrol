@@ -7,17 +7,17 @@ app.use(express.static(__dirname));
 
 const PORT = process.env.PORT || 3000;
 
-// Estado inicial das 50 mesas
+// Estado das 50 mesas
 let estadoMesas = {}; 
 for(let i=1; i<=50; i++) {
     estadoMesas[i] = { ativa: false, acao: '', quantidade: 0, atendida: false };
 }
 
-// Rotas de Páginas
+// Entrega das Páginas
 app.get('/mesa/:numero', (req, res) => res.sendFile(path.join(__dirname, 'index.html')));
 app.get('/painel', (req, res) => res.sendFile(path.join(__dirname, 'painel.html')));
 
-// Receber chamado
+// RECEBER CHAMADO (Sincronizado com o Cliente)
 app.post('/enviar-chamado', (req, res) => {
     const { mesa, acao } = req.body;
     const m = parseInt(mesa);
@@ -26,6 +26,7 @@ app.post('/enviar-chamado', (req, res) => {
         estadoMesas[m].atendida = false;
         estadoMesas[m].acao = acao;
         estadoMesas[m].quantidade += 1;
+        console.log(`Mesa ${m} chamando: ${acao}`);
     }
     res.status(200).json({ message: "OK" });
 });
