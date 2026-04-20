@@ -1,58 +1,24 @@
-<!DOCTYPE html>
-<html lang="pt-br">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <script src="https://tailwindcss.com"></script>
-    <title>Fatia's Control</title>
-    <style>
-        @import url('https://googleapis.com');
-        body { background: #0a0a0a; color: #E6B952; font-family: 'Montserrat', sans-serif; transition: 0.5s; }
-        .btn-p { background: linear-gradient(145deg, #1a1a1a, #050505); border: 1px solid #E6B95244; border-radius: 20px; }
-        .btn-p:active { background: #E6B952; color: #000; }
-    </style>
-</head>
-<body class="h-screen flex flex-col p-6 justify-between text-center">
-    <header>
-        <p class="text-[10px] text-gray-500 uppercase font-bold">MESA</p>
-        <h1 id="num-mesa" class="text-5xl font-black italic">--</h1>
-    </header>
+<script>
+    const nMesa = window.location.pathname.split('/').pop() || "0";
+    document.getElementById('num-mesa').innerText = nMesa;
+    const somSuave = new Audio('/suave.mp3');
 
-    <main class="grid grid-cols-2 gap-4">
-        <button onclick="enviar('Cardápio')" class="btn-p h-32 flex flex-col items-center justify-center"><b>CARDÁPIO</b></button>
-        <button onclick="enviar('Garçom')" class="btn-p h-32 flex flex-col items-center justify-center"><b>GARÇOM</b></button>
-        <button onclick="enviar('Wi-Fi')" class="btn-p h-32 flex flex-col items-center justify-center"><b>WI-FI</b></button>
-        <button onclick="enviar('Conta')" class="btn-p h-32 flex flex-col items-center justify-center"><b>CONTA</b></button>
-    </main>
+    function enviar(acao) {
+        if (navigator.vibrate) navigator.vibrate(100);
+        fetch('/enviar-chamado', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({ mesa: nMesa, acao: acao })
+        });
+    }
 
-    <script>
-        const mesa = window.location.pathname.split('/').pop() || "0";
-        document.getElementById('num-mesa').innerText = mesa;
-        const somSuave = new Audio('/suave.mp3');
-
-        function enviar(acao) {
-            if (navigator.vibrate) navigator.vibrate(100);
-            fetch('/enviar-chamado', {
-                method: 'POST',
-                headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify({ mesa: mesa, acao: acao })
-            })
-            .then(res => res.json())
-            .then(data => console.log("Resposta:", data))
-            .catch(err => console.error("Erro no envio:", err));
-        }
-
-        setInterval(() => {
-            fetch(`/status-atendimento/${mesa}`)
-                .then(res => res.json())
-                .then(dados => {
-                    if (dados.atendido) {
-                        somSuave.play().catch(()=>{});
-                        document.body.style.background = "#064e3b";
-                        setTimeout(() => { document.body.style.background = "#0a0a0a"; }, 6000);
-                    }
-                });
-        }, 3000);
-    </script>
-</body>
-</html>
+    setInterval(() => {
+        fetch(`/status/${nMesa}`).then(r => r.json()).then(d => {
+            if (d.atendido) {
+                somSuave.play().catch(()=>{});
+                document.body.style.background = "#064e3b";
+                setTimeout(() => { document.body.style.background = "#0a0a0a"; }, 5000);
+            }
+        });
+    }, 4000);
+</script>
