@@ -48,26 +48,27 @@
     <script>
         const mesa = window.location.pathname.split('/').pop() || "0";
         document.getElementById('num-mesa').innerText = mesa;
-        const somSuave = new Audio('https://mixkit.co');
+        const somSuave = new Audio('/suave.mp3');
 
         function enviar(acao) {
+            if (navigator.vibrate) navigator.vibrate(100); 
             fetch('/enviar-chamado', {
                 method: 'POST',
                 headers: {'Content-Type': 'application/json'},
                 body: JSON.stringify({ mesa, acao })
-            }).then(() => alert("Solicitação enviada! Aguarde a confirmação."));
+            }).then(() => alert("Solicitação enviada!"));
         }
 
-        // Checa se o gerente atendeu
         setInterval(() => {
             fetch(`/status-atendimento/${mesa}`)
                 .then(res => res.json())
                 .then(dados => {
                     if (dados.atendido) {
                         somSuave.play().catch(()=>{});
+                        if (navigator.vibrate) navigator.vibrate([100, 50, 100]);
                         document.body.style.background = "#064e3b"; 
-                        alert("✅ O gerente recebeu seu pedido e o garçom está vindo!");
-                        setTimeout(() => { document.body.style.background = "#0a0a0a"; }, 8000);
+                        alert("✅ Atendimento Confirmado!");
+                        setTimeout(() => { document.body.style.background = "#0a0a0a"; }, 5000);
                     }
                 });
         }, 4000);
