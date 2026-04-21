@@ -4,9 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <script src="https://tailwindcss.com"></script>
-    <title>Fatia's Control</title>
+    <title>Fatia's Control - Mesa</title>
     <style>
-        /* Ajuste para a imagem não esticar e ocupar a tela corretamente */
         body, html { 
             margin: 0; padding: 0; width: 100%; height: 100%; 
             overflow: hidden; background-color: #000; 
@@ -14,8 +13,8 @@
         }
         
         .painel-container {
-            background-image: url('fundo.jpg'); 
-            background-size: contain; /* Mantém a proporção sem esticar */
+            background-image: url('/fundo.jpg'); /* A barra '/' antes do nome garante que ele ache a imagem em qualquer rota */
+            background-size: contain;
             background-repeat: no-repeat;
             background-position: center;
             width: 100vw;
@@ -26,7 +25,7 @@
         /* Grade invisível para os 4 botões coloridos */
         .grade-toque {
             position: absolute;
-            top: 47%; left: 14%; right: 14%; bottom: 12%;
+            top: 45%; left: 14%; right: 14%; bottom: 15%;
             display: grid;
             grid-template-columns: 1fr 1fr;
             grid-template-rows: 1fr 1fr;
@@ -34,10 +33,10 @@
             z-index: 10;
         }
 
-        /* Botões de sistema no rodapé corrigidos para aparecerem na tela */
+        /* Botões de sistema (Sair e Minimizar) */
         .controles-sistema {
             position: absolute;
-            bottom: 3%; left: 0; right: 0;
+            bottom: 4%; left: 0; right: 0;
             display: flex;
             justify-content: space-around;
             padding: 0 20%;
@@ -47,18 +46,18 @@
         .btn-invisivel { background: transparent; border: none; outline: none; cursor: pointer; }
         .btn-sistema { width: 70px; height: 50px; background: transparent; border: none; cursor: pointer; }
 
-        /* Modal do Wi-Fi */
+        /* Janela flutuante do Wi-Fi */
         #modal-wifi {
             display: none; position: fixed; inset: 0; 
-            background: rgba(0,0,0,0.9); z-index: 1000;
+            background: rgba(0,0,0,0.95); z-index: 1000;
             align-items: center; justify-content: center; backdrop-filter: blur(8px);
         }
         .pop-up {
             background: #111; border: 2px solid #E6B952; padding: 30px;
-            border-radius: 30px; text-align: center; color: white; width: 85%;
+            border-radius: 30px; text-align: center; color: white; width: 85%; max-width: 400px;
         }
 
-        /* TELA DE INICIAR AGORA - Crucial para som e tela cheia */
+        /* TELA DE INICIAR AGORA */
         #overlay-inicio { 
             position: fixed; inset: 0; background: #000; z-index: 9999; 
             display: flex; flex-direction: column; align-items: center; justify-content: center; 
@@ -73,16 +72,12 @@
 </head>
 <body>
 
-    <!-- TELA INICIAL: INICIAR AGORA -->
     <div id="overlay-inicio" onclick="iniciarSistema()">
-        <button class="btn-iniciar animate-bounce">
-            INICIAR AGORA
-        </button>
-        <p class="text-[#E6B952] opacity-50 mt-4 text-[10px] uppercase">Toque para carregar o painel</p>
+        <button class="btn-iniciar animate-bounce">INICIAR AGORA</button>
+        <p class="text-[#E6B952] opacity-50 mt-4 text-[12px] uppercase font-bold">Mesa <span id="label-mesa">--</span></p>
     </div>
 
     <div class="painel-container">
-        <!-- Áreas de clique dos 4 botões coloridos -->
         <div class="grade-toque">
             <button onclick="confirmarEnvio('Garçom')" class="btn-invisivel"></button>
             <button onclick="confirmarEnvio('Conta')" class="btn-invisivel"></button>
@@ -90,29 +85,31 @@
             <button onclick="confirmarEnvio('Cardápio')" class="btn-invisivel"></button>
         </div>
 
-        <!-- Áreas de clique do Sair e Minimizar (X e Setas no rodapé) -->
         <div class="controles-sistema">
             <button onclick="sair()" class="btn-sistema"></button>
             <button onclick="minimizar()" class="btn-sistema"></button>
         </div>
     </div>
 
-    <!-- Modal Wi-Fi -->
     <div id="modal-wifi">
         <div class="pop-up">
-            <h2 style="color:#E6B952; font-weight: bold; margin-bottom: 10px;">WI-FI LIBERADO</h2>
+            <h2 style="color:#E6B952; font-weight: bold; margin-bottom: 10px; font-size: 18px;">WI-FI LIBERADO</h2>
             <p style="font-size: 10px; opacity: 0.5;">REDE: fatias cliente</p>
-            <h1 style="font-size: 32px; font-weight: 900; margin: 15px 0;">fatias2025</h1>
-            <button onclick="fecharWifi()" style="color: #ff4444; font-weight: bold; border: 1px solid #ff4444; padding: 5px 20px; border-radius: 20px; font-size: 10px;">FECHAR [X]</button>
+            <h1 style="font-size: 32px; font-weight: 900; margin: 15px 0; color: white;">fatias2025</h1>
+            <button onclick="fecharWifi()" style="color: #ff4444; font-weight: bold; border: 1px solid #ff4444; padding: 8px 25px; border-radius: 25px; font-size: 10px; margin-top: 15px;">FECHAR [X]</button>
         </div>
     </div>
 
     <script>
-        const mesa = window.location.pathname.split('/').pop() || "01";
+        // PEGA O NÚMERO DA MESA CORRETAMENTE (Ex: /mesa/5 vira 5)
+        const pathParts = window.location.pathname.split('/');
+        const mesa = pathParts[pathParts.length - 1] || "01";
+        document.getElementById('label-mesa').innerText = mesa;
+
         const somAlerta = new Audio('/suave.mp3');
 
         function iniciarSistema() {
-            // Carrega o áudio e entra em tela cheia
+            // Desbloqueia o som para o navegador
             somAlerta.play().then(() => { somAlerta.pause(); somAlerta.currentTime = 0; });
             document.documentElement.requestFullscreen().catch(() => {});
             document.getElementById('overlay-inicio').style.display = 'none';
@@ -121,8 +118,11 @@
         function abrirWifi() { document.getElementById('modal-wifi').style.display = 'flex'; }
         function fecharWifi() { document.getElementById('modal-wifi').style.display = 'none'; }
 
-        function sair() { if(confirm("Encerrar sistema?")) window.location.href = "about:blank"; }
-        function minimizar() { document.exitFullscreen(); document.getElementById('overlay-inicio').style.display = 'flex'; }
+        function sair() { if(confirm("Encerrar sistema da mesa " + mesa + "?")) window.location.href = "about:blank"; }
+        function minimizar() { 
+            if(document.exitFullscreen) document.exitFullscreen().catch(()=>{}); 
+            document.getElementById('overlay-inicio').style.display = 'flex'; 
+        }
 
         function confirmarEnvio(acao) {
             if(confirm(`Confirmar chamado de ${acao}?`)) {
@@ -134,15 +134,14 @@
             }
         }
 
-        // Monitoramento do atendimento
         setInterval(() => {
             fetch(`/status-atendimento/${mesa}`).then(res => res.json()).then(dados => {
                 if (dados.atendido) {
                     somAlerta.play().catch(()=>{});
-                    alert("✅ O garçom está a caminho!");
+                    alert("✅ O garçom está a caminho da sua mesa!");
                 }
             });
-        }, 5000);
+        }, 4000);
     </script>
 </body>
 </html>
