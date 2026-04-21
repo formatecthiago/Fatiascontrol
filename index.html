@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="pt-br">
 <head>
@@ -7,120 +6,126 @@
     <script src="https://tailwindcss.com"></script>
     <title>Fatia's Control</title>
     <style>
+        /* Ajuste para a imagem não esticar e ocupar a tela corretamente */
         body, html { 
             margin: 0; padding: 0; width: 100%; height: 100%; 
             overflow: hidden; background-color: #000; 
+            display: flex; justify-content: center; align-items: center;
         }
         
         .painel-container {
             background-image: url('fundo.jpg'); 
-            background-size: 100% 100%;
+            background-size: contain; /* Mantém a proporção sem esticar */
             background-repeat: no-repeat;
             background-position: center;
             width: 100vw;
             height: 100vh;
             position: relative;
         }
+
+        /* Grade invisível para os 4 botões coloridos */
         .grade-toque {
             position: absolute;
-            top: 38%; left: 15%; right: 15%; bottom: 15%;
+            top: 47%; left: 14%; right: 14%; bottom: 12%;
             display: grid;
             grid-template-columns: 1fr 1fr;
             grid-template-rows: 1fr 1fr;
             gap: 15px;
             z-index: 10;
         }
+
+        /* Botões de sistema no rodapé corrigidos para aparecerem na tela */
         .controles-sistema {
             position: absolute;
             bottom: 3%; left: 0; right: 0;
             display: flex;
             justify-content: space-around;
-            padding: 0 15%;
+            padding: 0 20%;
             z-index: 20;
         }
+
         .btn-invisivel { background: transparent; border: none; outline: none; cursor: pointer; }
-        .btn-sistema { width: 100px; height: 60px; background: transparent; border: none; cursor: pointer; }
+        .btn-sistema { width: 70px; height: 50px; background: transparent; border: none; cursor: pointer; }
+
+        /* Modal do Wi-Fi */
         #modal-wifi {
             display: none; position: fixed; inset: 0; 
             background: rgba(0,0,0,0.9); z-index: 1000;
             align-items: center; justify-content: center; backdrop-filter: blur(8px);
         }
         .pop-up {
-            background: #111; border: 2px solid #E6B952; padding: 40px;
-            border-radius: 30px; text-align: center; color: white; font-family: sans-serif;
-            width: 85%; max-width: 400px;
+            background: #111; border: 2px solid #E6B952; padding: 30px;
+            border-radius: 30px; text-align: center; color: white; width: 85%;
         }
-        /* Overlay Flutuante Transparente para Iniciar e Carregar Sons */
+
+        /* TELA DE INICIAR AGORA - Crucial para som e tela cheia */
         #overlay-inicio { 
-            position: fixed; inset: 0; 
-            background: rgba(0,0,0,0.8); 
-            z-index: 9999; 
-            display: flex; 
-            align-items: center; 
-            justify-content: center; 
+            position: fixed; inset: 0; background: #000; z-index: 9999; 
+            display: flex; flex-direction: column; align-items: center; justify-content: center; 
+        }
+        .btn-iniciar {
+            border: 2px solid #E6B952; color: #E6B952; padding: 20px 50px; 
+            border-radius: 50px; font-weight: 900; font-size: 24px;
+            text-transform: uppercase; letter-spacing: 2px;
+            box-shadow: 0 0 20px rgba(230, 185, 82, 0.4);
         }
     </style>
 </head>
 <body>
-    <!-- BOTÃO INICIAR: Desbloqueia Tela Cheia e Carrega os Sons -->
+
+    <!-- TELA INICIAL: INICIAR AGORA -->
     <div id="overlay-inicio" onclick="iniciarSistema()">
-        <div class="px-10 py-4 border-2 border-[#E6B952] rounded-full animate-pulse font-bold text-[#E6B952] cursor-pointer text-center">
-            CONECTAR MESA<br>
-            <span class="text-[10px] font-normal opacity-70">CARREGANDO SISTEMA DE SOM...</span>
-        </div>
+        <button class="btn-iniciar animate-bounce">
+            INICIAR AGORA
+        </button>
+        <p class="text-[#E6B952] opacity-50 mt-4 text-[10px] uppercase">Toque para carregar o painel</p>
     </div>
+
     <div class="painel-container">
+        <!-- Áreas de clique dos 4 botões coloridos -->
         <div class="grade-toque">
             <button onclick="confirmarEnvio('Garçom')" class="btn-invisivel"></button>
             <button onclick="confirmarEnvio('Conta')" class="btn-invisivel"></button>
             <button onclick="abrirWifi()" class="btn-invisivel"></button>
             <button onclick="confirmarEnvio('Cardápio')" class="btn-invisivel"></button>
         </div>
+
+        <!-- Áreas de clique do Sair e Minimizar (X e Setas no rodapé) -->
         <div class="controles-sistema">
             <button onclick="sair()" class="btn-sistema"></button>
             <button onclick="minimizar()" class="btn-sistema"></button>
         </div>
     </div>
+
+    <!-- Modal Wi-Fi -->
     <div id="modal-wifi">
         <div class="pop-up">
-            <h2 style="color:#E6B952; font-weight: bold; margin-bottom: 20px; font-size: 18px;">CONECTAR AO WI-FI</h2>
-            <p style="font-size: 10px; opacity: 0.6; text-transform: uppercase; margin-bottom: 2px;">Nome da Rede:</p>
-            <p style="font-size: 22px; font-weight: 700; color: white; margin-bottom: 25px;">fatias cliente</p>
-            <p style="font-size: 10px; opacity: 0.6; text-transform: uppercase; margin-bottom: 2px;">Senha da Rede:</p>
-            <h1 style="font-size: 36px; font-weight: 900; color: #E6B952; letter-spacing: 1px;">fatias2025</h1>
-            <button onclick="fecharWifi()" style="color: #ff4444; font-weight: bold; margin-top: 35px; border: 1px solid #ff4444; padding: 8px 25px; border-radius: 25px; font-size: 12px; text-transform: uppercase;">Fechar [X]</button>
+            <h2 style="color:#E6B952; font-weight: bold; margin-bottom: 10px;">WI-FI LIBERADO</h2>
+            <p style="font-size: 10px; opacity: 0.5;">REDE: fatias cliente</p>
+            <h1 style="font-size: 32px; font-weight: 900; margin: 15px 0;">fatias2025</h1>
+            <button onclick="fecharWifi()" style="color: #ff4444; font-weight: bold; border: 1px solid #ff4444; padding: 5px 20px; border-radius: 20px; font-size: 10px;">FECHAR [X]</button>
         </div>
     </div>
+
     <script>
         const mesa = window.location.pathname.split('/').pop() || "01";
-        
-        // Definimos o áudio aqui
         const somAlerta = new Audio('/suave.mp3');
+
         function iniciarSistema() {
-            // 1. Entra em Tela Cheia
+            // Carrega o áudio e entra em tela cheia
+            somAlerta.play().then(() => { somAlerta.pause(); somAlerta.currentTime = 0; });
             document.documentElement.requestFullscreen().catch(() => {});
-            
-            // 2. CARREGAR SOM: Toca um silêncio rápido para o navegador liberar o áudio
-            somAlerta.play().then(() => {
-                somAlerta.pause(); // Para imediatamente após desbloquear
-                somAlerta.currentTime = 0;
-                console.log("Sons carregados com sucesso!");
-            }).catch(e => console.log("Erro ao pré-carregar som: ", e));
-            // 3. Esconde a tela de início
             document.getElementById('overlay-inicio').style.display = 'none';
         }
+
         function abrirWifi() { document.getElementById('modal-wifi').style.display = 'flex'; }
         function fecharWifi() { document.getElementById('modal-wifi').style.display = 'none'; }
-        function sair() { 
-            if(confirm("Deseja encerrar o painel da Mesa " + mesa + "?")) window.location.href = "about:blank"; 
-        }
-        function minimizar() {
-            if (document.exitFullscreen) document.exitFullscreen().catch(() => {});
-            document.getElementById('overlay-inicio').style.display = 'flex';
-        }
+
+        function sair() { if(confirm("Encerrar sistema?")) window.location.href = "about:blank"; }
+        function minimizar() { document.exitFullscreen(); document.getElementById('overlay-inicio').style.display = 'flex'; }
+
         function confirmarEnvio(acao) {
-            if(confirm(`Deseja solicitar ${acao}?`)) {
-                if (navigator.vibrate) navigator.vibrate(100);
+            if(confirm(`Confirmar chamado de ${acao}?`)) {
                 fetch('/enviar-chamado', {
                     method: 'POST',
                     headers: {'Content-Type': 'application/json'},
@@ -128,12 +133,13 @@
                 });
             }
         }
-        // Loop de monitoramento
+
+        // Monitoramento do atendimento
         setInterval(() => {
             fetch(`/status-atendimento/${mesa}`).then(res => res.json()).then(dados => {
                 if (dados.atendido) {
-                    somAlerta.play().catch(e => console.log("Erro ao tocar som: ", e));
-                    alert("✅ O garçom está a caminho da Mesa " + mesa);
+                    somAlerta.play().catch(()=>{});
+                    alert("✅ O garçom está a caminho!");
                 }
             });
         }, 5000);
