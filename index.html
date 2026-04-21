@@ -20,70 +20,49 @@
             background-size: contain;
             background-repeat: no-repeat;
             background-position: center;
-            width: 100vw;
-            height: 100vh;
+            width: 100vw; height: 100vh;
             position: relative;
         }
 
-        /* ETIQUETA DA MESA (Vazada sobre a madeira) */
         .etiqueta-mesa {
-            position: absolute;
-            top: 36%; left: 14%;
-            padding: 5px 15px;
-            border: 2px solid #E6B952;
-            border-radius: 10px;
-            color: #E6B952;
-            font-weight: 900;
-            font-size: 14px;
-            text-transform: uppercase;
-            background: rgba(0,0,0,0.3);
-            z-index: 15;
+            position: absolute; top: 36%; left: 14%; padding: 5px 15px;
+            border: 2px solid #E6B952; border-radius: 10px; color: #E6B952;
+            font-weight: 900; font-size: 14px; text-transform: uppercase;
+            background: rgba(0,0,0,0.3); z-index: 15;
         }
 
         .grade-toque {
-            position: absolute;
-            top: 45%; left: 14%; right: 14%; bottom: 15%;
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            grid-template-rows: 1fr 1fr;
-            gap: 15px;
-            z-index: 10;
+            position: absolute; top: 45%; left: 14%; right: 14%; bottom: 15%;
+            display: grid; grid-template-columns: 1fr 1fr; grid-template-rows: 1fr 1fr;
+            gap: 15px; z-index: 10;
         }
 
         .btn-invisivel { background: transparent; border: none; outline: none; cursor: pointer; }
         .btn-sistema { width: 70px; height: 50px; background: transparent; border: none; cursor: pointer; }
 
         .controles-sistema {
-            position: absolute;
-            bottom: 4%; left: 0; right: 0;
-            display: flex;
-            justify-content: space-around;
-            padding: 0 20%;
-            z-index: 20;
+            position: absolute; bottom: 4%; left: 0; right: 0;
+            display: flex; justify-content: space-around; padding: 0 20%; z-index: 20;
         }
 
-        /* NOTIFICAÇÃO ELEGANTE NO TOPO */
+        /* NOTIFICAÇÃO PERSONALIZADA */
         #notificacao-atendimento {
             display: none; position: fixed; top: 20px; left: 50%; transform: translateX(-50%);
-            background: #1e40af; color: white; padding: 15px 30px; border-radius: 50px;
+            background: #1e40af; color: white; padding: 20px 30px; border-radius: 50px;
             font-weight: bold; box-shadow: 0 10px 20px rgba(0,0,0,0.5); z-index: 2000;
             border: 2px solid #3b82f6; text-align: center; width: 85%;
             animation: slideIn 0.4s ease-out;
         }
         @keyframes slideIn { from { top: -100px; opacity: 0; } to { top: 20px; opacity: 1; } }
 
-        /* TELA INICIAL ELEGANTE (Glassmorphism) */
         #overlay-inicio { 
             position: fixed; inset: 0; background: rgba(0,0,0,0.85); z-index: 9999; 
             display: flex; flex-direction: column; align-items: center; justify-content: center;
             backdrop-filter: blur(10px);
         }
         .container-iniciar {
-            text-align: center;
-            padding: 40px;
-            border: 1px solid rgba(230, 185, 82, 0.3);
-            border-radius: 40px;
-            background: rgba(255, 255, 255, 0.03);
+            text-align: center; padding: 40px; border: 1px solid rgba(230, 185, 82, 0.3);
+            border-radius: 40px; background: rgba(255, 255, 255, 0.03);
         }
         .btn-iniciar-text {
             color: #E6B952; font-weight: 900; font-size: 28px;
@@ -105,30 +84,25 @@
 </head>
 <body>
 
-    <!-- Notificação sem endereço -->
     <div id="notificacao-atendimento">
-        ✅ O GARÇOM ESTÁ A CAMINHO!
+        <span id="texto-feedback">✅ O GARÇOM ESTÁ A CAMINHO!</span>
     </div>
 
-    <!-- TELA INICIAL ELEGANTE -->
     <div id="overlay-inicio" onclick="iniciarSistema()">
         <div class="container-iniciar">
             <div class="btn-iniciar-text">INICIAR AGORA</div>
             <div class="mt-4 text-[#E6B952] font-bold text-sm tracking-widest opacity-60">MESA <span id="label-mesa-inicio">--</span></div>
-            <div class="mt-8 text-white/30 text-[10px] uppercase tracking-tighter">Toque para conectar seu totem</div>
         </div>
     </div>
 
     <div class="painel-container">
         <div class="etiqueta-mesa">MESA <span id="num-mesa-painel">--</span></div>
-
         <div class="grade-toque">
             <button onclick="confirmarEnvio('Garçom')" class="btn-invisivel"></button>
             <button onclick="confirmarEnvio('Conta')" class="btn-invisivel"></button>
             <button onclick="abrirWifi()" class="btn-invisivel"></button>
             <button onclick="confirmarEnvio('Cardápio')" class="btn-invisivel"></button>
         </div>
-
         <div class="controles-sistema">
             <button onclick="sair()" class="btn-sistema"></button>
             <button onclick="minimizar()" class="btn-sistema"></button>
@@ -136,11 +110,11 @@
     </div>
 
     <div id="modal-wifi">
-        <div class="bg-[#111] border-2 border-[#E6B952] p-10 rounded-[30px] text-center text-white w-[85%] max-width-[400px]">
+        <div class="bg-[#111] border-2 border-[#E6B952] p-10 rounded-[30px] text-center text-white w-[85%]">
             <h2 style="color:#E6B952; font-weight: bold; margin-bottom: 10px;">WI-FI LIBERADO</h2>
             <p style="font-size: 10px; opacity: 0.5;">REDE: fatias cliente</p>
             <h1 style="font-size: 32px; font-weight: 900; margin: 15px 0;">fatias2025</h1>
-            <button onclick="fecharWifi()" style="color: #ff4444; font-weight: bold; border: 1px solid #ff4444; padding: 8px 25px; border-radius: 25px; font-size: 10px; margin-top: 15px;">FECHAR [X]</button>
+            <button onclick="fecharWifi()" class="border border-red-500 text-red-500 px-6 py-2 rounded-full font-bold text-[10px] uppercase">Fechar [X]</button>
         </div>
     </div>
 
@@ -151,9 +125,10 @@
         document.getElementById('num-mesa-painel').innerText = mesa;
 
         const somAlerta = new Audio('/suave.mp3');
+        let atendidoAnteriormente = false;
+        let ultimoPedido = "Garçom"; 
 
         function iniciarSistema() {
-            // Sincronização de som imediata no toque
             somAlerta.play().then(() => { somAlerta.pause(); somAlerta.currentTime = 0; });
             document.documentElement.requestFullscreen().catch(() => {});
             document.getElementById('overlay-inicio').style.display = 'none';
@@ -170,6 +145,7 @@
 
         function confirmarEnvio(acao) {
             if(confirm(`Confirmar chamado de ${acao}?`)) {
+                ultimoPedido = acao; // Salva o tipo do pedido
                 fetch('/enviar-chamado', {
                     method: 'POST',
                     headers: {'Content-Type': 'application/json'},
@@ -178,17 +154,32 @@
             }
         }
 
-        // MONITORAMENTO SINCRONIZADO E RÁPIDO
         setInterval(() => {
             fetch(`/status-atendimento/${mesa}`).then(res => res.json()).then(dados => {
-                if (dados.atendido) {
-                    // DISPARA SOM E VISUAL JUNTOS
+                if (dados.atendido && !atendidoAnteriormente) {
                     somAlerta.currentTime = 0;
                     somAlerta.play();
                     
+                    const spanTexto = document.getElementById('texto-feedback');
                     const note = document.getElementById('notificacao-atendimento');
+                    
+                    // Personaliza a mensagem baseada no último pedido
+                    if (ultimoPedido === "Conta") {
+                        spanTexto.innerText = "✅ A CONTA ESTÁ A CAMINHO!";
+                    } else if (ultimoPedido === "Cardápio") {
+                        spanTexto.innerText = "✅ O CARDÁPIO ESTÁ A CAMINHO!";
+                    } else {
+                        spanTexto.innerText = "✅ O GARÇOM ESTÁ A CAMINHO!";
+                    }
+
                     note.style.display = 'block';
                     setTimeout(() => { note.style.display = 'none'; }, 6000);
+                    
+                    atendidoAnteriormente = true;
+                } 
+                
+                if (!dados.atendido) {
+                    atendidoAnteriormente = false;
                 }
             });
         }, 1000);
