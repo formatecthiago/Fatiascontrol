@@ -6,10 +6,13 @@
     <script src="https://tailwindcss.com"></script>
     <title>Fatia's Control - Cliente</title>
     <style>
+        @import url('https://googleapis.com');
+
         body, html { 
             margin: 0; padding: 0; width: 100%; height: 100%; 
             overflow: hidden; background-color: #000; 
             display: flex; justify-content: center; align-items: center;
+            font-family: 'Montserrat', sans-serif;
         }
         
         .painel-container {
@@ -17,72 +20,127 @@
             background-size: contain;
             background-repeat: no-repeat;
             background-position: center;
-            width: 100vw; height: 100vh;
+            width: 100vw;
+            height: 100vh;
             position: relative;
         }
 
+        /* ETIQUETA DA MESA (Vazada sobre a madeira) */
         .etiqueta-mesa {
-            position: absolute; top: 36%; left: 14%; padding: 5px 15px;
-            border: 2px solid #E6B952; border-radius: 10px; color: #E6B952;
-            font-weight: 900; font-size: 14px; text-transform: uppercase;
-            background: rgba(0,0,0,0.2); z-index: 15;
+            position: absolute;
+            top: 36%; left: 14%;
+            padding: 5px 15px;
+            border: 2px solid #E6B952;
+            border-radius: 10px;
+            color: #E6B952;
+            font-weight: 900;
+            font-size: 14px;
+            text-transform: uppercase;
+            background: rgba(0,0,0,0.3);
+            z-index: 15;
         }
 
         .grade-toque {
-            position: absolute; top: 45%; left: 14%; right: 14%; bottom: 15%;
-            display: grid; grid-template-columns: 1fr 1fr; grid-template-rows: 1fr 1fr;
-            gap: 15px; z-index: 10;
+            position: absolute;
+            top: 45%; left: 14%; right: 14%; bottom: 15%;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            grid-template-rows: 1fr 1fr;
+            gap: 15px;
+            z-index: 10;
         }
 
         .btn-invisivel { background: transparent; border: none; outline: none; cursor: pointer; }
+        .btn-sistema { width: 70px; height: 50px; background: transparent; border: none; cursor: pointer; }
 
-        /* NOTIFICAÇÃO SINCRONIZADA */
-        #notificacao-atendimento {
-            display: none; position: fixed; top: 20px; left: 50%; transform: translateX(-50%);
-            background: #1e40af; color: white; padding: 20px 30px; border-radius: 50px;
-            font-weight: bold; box-shadow: 0 10px 20px rgba(0,0,0,0.5); z-index: 2000;
-            border: 2px solid #3b82f6; text-align: center; width: 85%;
-            animation: slideDown 0.3s ease-out;
+        .controles-sistema {
+            position: absolute;
+            bottom: 4%; left: 0; right: 0;
+            display: flex;
+            justify-content: space-around;
+            padding: 0 20%;
+            z-index: 20;
         }
 
-        @keyframes slideDown { from { top: -100px; } to { top: 20px; } }
+        /* NOTIFICAÇÃO ELEGANTE NO TOPO */
+        #notificacao-atendimento {
+            display: none; position: fixed; top: 20px; left: 50%; transform: translateX(-50%);
+            background: #1e40af; color: white; padding: 15px 30px; border-radius: 50px;
+            font-weight: bold; box-shadow: 0 10px 20px rgba(0,0,0,0.5); z-index: 2000;
+            border: 2px solid #3b82f6; text-align: center; width: 85%;
+            animation: slideIn 0.4s ease-out;
+        }
+        @keyframes slideIn { from { top: -100px; opacity: 0; } to { top: 20px; opacity: 1; } }
 
+        /* TELA INICIAL ELEGANTE (Glassmorphism) */
         #overlay-inicio { 
-            position: fixed; inset: 0; background: #000; z-index: 9999; 
-            display: flex; flex-direction: column; align-items: center; justify-content: center; 
+            position: fixed; inset: 0; background: rgba(0,0,0,0.85); z-index: 9999; 
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            backdrop-filter: blur(10px);
+        }
+        .container-iniciar {
+            text-align: center;
+            padding: 40px;
+            border: 1px solid rgba(230, 185, 82, 0.3);
+            border-radius: 40px;
+            background: rgba(255, 255, 255, 0.03);
+        }
+        .btn-iniciar-text {
+            color: #E6B952; font-weight: 900; font-size: 28px;
+            text-transform: uppercase; letter-spacing: 4px;
+            animation: pulse-gold 2s infinite;
+        }
+        @keyframes pulse-gold {
+            0% { text-shadow: 0 0 10px rgba(230,185,82,0.2); transform: scale(1); }
+            50% { text-shadow: 0 0 25px rgba(230,185,82,0.7); transform: scale(1.05); }
+            100% { text-shadow: 0 0 10px rgba(230,185,82,0.2); transform: scale(1); }
+        }
+
+        #modal-wifi {
+            display: none; position: fixed; inset: 0; 
+            background: rgba(0,0,0,0.95); z-index: 1000;
+            align-items: center; justify-content: center; backdrop-filter: blur(8px);
         }
     </style>
 </head>
 <body>
 
+    <!-- Notificação sem endereço -->
     <div id="notificacao-atendimento">
-        <span id="texto-notificacao">✅ O GARÇOM ESTÁ A CAMINHO!</span>
+        ✅ O GARÇOM ESTÁ A CAMINHO!
     </div>
 
+    <!-- TELA INICIAL ELEGANTE -->
     <div id="overlay-inicio" onclick="iniciarSistema()">
-        <button class="border-2 border-[#E6B952] text-[#E6B952] px-10 py-4 rounded-full animate-bounce font-bold text-xl uppercase">
-            INICIAR AGORA<br>
-            <span class="text-xs opacity-70">Mesa <span id="label-mesa-inicio">--</span></span>
-        </button>
+        <div class="container-iniciar">
+            <div class="btn-iniciar-text">INICIAR AGORA</div>
+            <div class="mt-4 text-[#E6B952] font-bold text-sm tracking-widest opacity-60">MESA <span id="label-mesa-inicio">--</span></div>
+            <div class="mt-8 text-white/30 text-[10px] uppercase tracking-tighter">Toque para conectar seu totem</div>
+        </div>
     </div>
 
     <div class="painel-container">
         <div class="etiqueta-mesa">MESA <span id="num-mesa-painel">--</span></div>
+
         <div class="grade-toque">
             <button onclick="confirmarEnvio('Garçom')" class="btn-invisivel"></button>
             <button onclick="confirmarEnvio('Conta')" class="btn-invisivel"></button>
             <button onclick="abrirWifi()" class="btn-invisivel"></button>
             <button onclick="confirmarEnvio('Cardápio')" class="btn-invisivel"></button>
         </div>
+
+        <div class="controles-sistema">
+            <button onclick="sair()" class="btn-sistema"></button>
+            <button onclick="minimizar()" class="btn-sistema"></button>
+        </div>
     </div>
 
-    <!-- MODAL WIFI -->
-    <div id="modal-wifi" class="hidden fixed inset-0 bg-black/90 z-[1000] flex items-center justify-center backdrop-blur-md">
-        <div class="bg-[#111] border-2 border-[#E6B952] p-10 rounded-[30px] text-center text-white w-[85%]">
-            <h2 class="text-[#E6B952] font-bold mb-4 uppercase">Wi-Fi</h2>
-            <p class="text-xs opacity-50 mb-1">REDE: fatias cliente</p>
-            <h1 class="text-3xl font-black mb-6">fatias2025</h1>
-            <button onclick="fecharWifi()" class="border border-red-500 text-red-500 px-6 py-2 rounded-full font-bold text-[10px] uppercase">Fechar</button>
+    <div id="modal-wifi">
+        <div class="bg-[#111] border-2 border-[#E6B952] p-10 rounded-[30px] text-center text-white w-[85%] max-width-[400px]">
+            <h2 style="color:#E6B952; font-weight: bold; margin-bottom: 10px;">WI-FI LIBERADO</h2>
+            <p style="font-size: 10px; opacity: 0.5;">REDE: fatias cliente</p>
+            <h1 style="font-size: 32px; font-weight: 900; margin: 15px 0;">fatias2025</h1>
+            <button onclick="fecharWifi()" style="color: #ff4444; font-weight: bold; border: 1px solid #ff4444; padding: 8px 25px; border-radius: 25px; font-size: 10px; margin-top: 15px;">FECHAR [X]</button>
         </div>
     </div>
 
@@ -92,26 +150,26 @@
         document.getElementById('label-mesa-inicio').innerText = mesa;
         document.getElementById('num-mesa-painel').innerText = mesa;
 
-        let pedidoAtual = "Garçom";
         const somAlerta = new Audio('/suave.mp3');
-        somAlerta.preload = "auto"; // Força o carregamento imediato
 
         function iniciarSistema() {
-            // "Acorda" o áudio no primeiro toque para evitar o delay depois
-            somAlerta.play().then(() => { 
-                somAlerta.pause(); 
-                somAlerta.currentTime = 0; 
-            });
+            // Sincronização de som imediata no toque
+            somAlerta.play().then(() => { somAlerta.pause(); somAlerta.currentTime = 0; });
             document.documentElement.requestFullscreen().catch(() => {});
             document.getElementById('overlay-inicio').style.display = 'none';
         }
 
-        function abrirWifi() { document.getElementById('modal-wifi').classList.remove('hidden'); }
-        function fecharWifi() { document.getElementById('modal-wifi').classList.add('hidden'); }
+        function abrirWifi() { document.getElementById('modal-wifi').style.display = 'flex'; }
+        function fecharWifi() { document.getElementById('modal-wifi').style.display = 'none'; }
+
+        function sair() { if(confirm("Encerrar mesa " + mesa + "?")) window.location.href = "about:blank"; }
+        function minimizar() { 
+            if(document.exitFullscreen) document.exitFullscreen().catch(()=>{}); 
+            document.getElementById('overlay-inicio').style.display = 'flex'; 
+        }
 
         function confirmarEnvio(acao) {
             if(confirm(`Confirmar chamado de ${acao}?`)) {
-                pedidoAtual = acao; // Salva o que o cliente pediu para mudar a mensagem depois
                 fetch('/enviar-chamado', {
                     method: 'POST',
                     headers: {'Content-Type': 'application/json'},
@@ -120,32 +178,20 @@
             }
         }
 
-        // MONITORAMENTO ULTRA RÁPIDO
+        // MONITORAMENTO SINCRONIZADO E RÁPIDO
         setInterval(() => {
             fetch(`/status-atendimento/${mesa}`).then(res => res.json()).then(dados => {
                 if (dados.atendido) {
-                    // DISPARA O SOM PRIMEIRO QUE TUDO
+                    // DISPARA SOM E VISUAL JUNTOS
                     somAlerta.currentTime = 0;
                     somAlerta.play();
                     
-                    // AJUSTA A MENSAGEM
-                    const texto = document.getElementById('texto-notificacao');
-                    if(pedidoAtual === "Conta") {
-                        texto.innerText = "✅ A CONTA ESTÁ A CAMINHO!";
-                    } else if(pedidoAtual === "Cardápio") {
-                        texto.innerText = "✅ O CARDÁPIO ESTÁ A CAMINHO!";
-                    } else {
-                        texto.innerText = "✅ O GARÇOM ESTÁ A CAMINHO!";
-                    }
-
-                    // MOSTRA O VISUAL
                     const note = document.getElementById('notificacao-atendimento');
                     note.style.display = 'block';
-                    
-                    setTimeout(() => { note.style.display = 'none'; }, 7000);
+                    setTimeout(() => { note.style.display = 'none'; }, 6000);
                 }
             });
-        }, 1000); 
+        }, 1000);
     </script>
 </body>
 </html>
