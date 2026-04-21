@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <script src="https://tailwindcss.com"></script>
-    <title>Fatia's Control - Mesa</title>
+    <title>Fatia's Control - Cliente</title>
     <style>
         body, html { 
             margin: 0; padding: 0; width: 100%; height: 100%; 
@@ -13,7 +13,7 @@
         }
         
         .painel-container {
-            background-image: url('/fundo.jpg'); /* A barra '/' antes do nome garante que ele ache a imagem em qualquer rota */
+            background-image: url('/fundo.jpg'); 
             background-size: contain;
             background-repeat: no-repeat;
             background-position: center;
@@ -22,7 +22,23 @@
             position: relative;
         }
 
-        /* Grade invisível para os 4 botões coloridos */
+        /* ETIQUETA DA MESA (Vazada com borda amarela) */
+        .etiqueta-mesa {
+            position: absolute;
+            top: 36%; /* Posicionada logo acima do quadrado vermelho */
+            left: 14%;
+            padding: 5px 15px;
+            border: 2px solid #E6B952;
+            border-radius: 10px;
+            color: #E6B952;
+            font-weight: 900;
+            font-size: 14px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            z-index: 15;
+            background: rgba(0,0,0,0.2); /* Leve transparência para destacar o texto sobre a madeira */
+        }
+
         .grade-toque {
             position: absolute;
             top: 45%; left: 14%; right: 14%; bottom: 15%;
@@ -33,7 +49,6 @@
             z-index: 10;
         }
 
-        /* Botões de sistema (Sair e Minimizar) */
         .controles-sistema {
             position: absolute;
             bottom: 4%; left: 0; right: 0;
@@ -46,18 +61,16 @@
         .btn-invisivel { background: transparent; border: none; outline: none; cursor: pointer; }
         .btn-sistema { width: 70px; height: 50px; background: transparent; border: none; cursor: pointer; }
 
-        /* Janela flutuante do Wi-Fi */
         #modal-wifi {
             display: none; position: fixed; inset: 0; 
             background: rgba(0,0,0,0.95); z-index: 1000;
             align-items: center; justify-content: center; backdrop-filter: blur(8px);
         }
         .pop-up {
-            background: #111; border: 2px solid #E6B952; padding: 30px;
+            background: #111; border: 2px solid #E6B952; padding: 40px;
             border-radius: 30px; text-align: center; color: white; width: 85%; max-width: 400px;
         }
 
-        /* TELA DE INICIAR AGORA */
         #overlay-inicio { 
             position: fixed; inset: 0; background: #000; z-index: 9999; 
             display: flex; flex-direction: column; align-items: center; justify-content: center; 
@@ -73,11 +86,18 @@
 <body>
 
     <div id="overlay-inicio" onclick="iniciarSistema()">
-        <button class="btn-iniciar animate-bounce">INICIAR AGORA</button>
-        <p class="text-[#E6B952] opacity-50 mt-4 text-[12px] uppercase font-bold">Mesa <span id="label-mesa">--</span></p>
+        <button class="btn-iniciar animate-bounce text-center">
+            INICIAR AGORA<br>
+            <span class="text-[12px] font-normal opacity-70">Mesa <span id="label-mesa-inicio">--</span></span>
+        </button>
     </div>
 
     <div class="painel-container">
+        <!-- ETIQUETA DINÂMICA DA MESA -->
+        <div class="etiqueta-mesa">
+            MESA <span id="num-mesa-painel">--</span>
+        </div>
+
         <div class="grade-toque">
             <button onclick="confirmarEnvio('Garçom')" class="btn-invisivel"></button>
             <button onclick="confirmarEnvio('Conta')" class="btn-invisivel"></button>
@@ -101,15 +121,16 @@
     </div>
 
     <script>
-        // PEGA O NÚMERO DA MESA CORRETAMENTE (Ex: /mesa/5 vira 5)
         const pathParts = window.location.pathname.split('/');
         const mesa = pathParts[pathParts.length - 1] || "01";
-        document.getElementById('label-mesa').innerText = mesa;
+        
+        // Atualiza o número da mesa em todos os lugares
+        document.getElementById('label-mesa-inicio').innerText = mesa;
+        document.getElementById('num-mesa-painel').innerText = mesa;
 
         const somAlerta = new Audio('/suave.mp3');
 
         function iniciarSistema() {
-            // Desbloqueia o som para o navegador
             somAlerta.play().then(() => { somAlerta.pause(); somAlerta.currentTime = 0; });
             document.documentElement.requestFullscreen().catch(() => {});
             document.getElementById('overlay-inicio').style.display = 'none';
@@ -138,7 +159,7 @@
             fetch(`/status-atendimento/${mesa}`).then(res => res.json()).then(dados => {
                 if (dados.atendido) {
                     somAlerta.play().catch(()=>{});
-                    alert("✅ O garçom está a caminho da sua mesa!");
+                    alert("✅ O garçom está a caminho!");
                 }
             });
         }, 4000);
