@@ -105,10 +105,10 @@
     </div>
 
     <script>
-        // --- CONFIGURAÇÃO GEOGRÁFICA ---
-        const RESTAURANTE_LAT = -5.8858; 
-        const RESTAURANTE_LON = -35.1741; 
-        const DISTANCIA_MAXIMA = 0.05; // AJUSTADO PARA 50 METROS
+        // --- CONFIGURAÇÃO GEOGRÁFICA ATUALIZADA ---
+        const RESTAURANTE_LAT = -5.87188; 
+        const RESTAURANTE_LON = -35.1816; 
+        const DISTANCIA_MAXIMA = 0.05; // 50 METROS
 
         const pathParts = window.location.pathname.split('/');
         const mesa = pathParts[pathParts.length - 1] || "01";
@@ -154,26 +154,23 @@
         function confirmarEnvio(acao) {
             if(confirm(`Confirmar chamado de ${acao}?`)) {
                 ultimoPedido = acao;
-                fetch('/enviar-chamado', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ mesa: mesa, acao: acao }) });
+                fetch('/enviar-chamado', { 
+                    method: 'POST', 
+                    headers: {'Content-Type': 'application/json'}, 
+                    body: JSON.stringify({ mesa: mesa, acao: acao }) 
+                });
+                exibirNotificacao();
             }
         }
 
-        setInterval(() => {
-            fetch(`/status-atendimento/${mesa}`).then(res => res.json()).then(dados => {
-                if (dados.atendido && !atendidoAnteriormente) {
-                    somAlerta.currentTime = 0; somAlerta.play();
-                    const spanTexto = document.getElementById('texto-feedback');
-                    const note = document.getElementById('notificacao-atendimento');
-                    spanTexto.innerText = ultimoPedido === "Conta" ? "✅ A CONTA ESTÁ A CAMINHO!" : "✅ O GARÇOM ESTÁ A CAMINHO!";
-                    note.style.display = 'block'; setTimeout(() => { note.style.display = 'none'; }, 6000);
-                    atendidoAnteriormente = true;
-                } 
-                if (!dados.atendido) atendidoAnteriormente = false;
-            });
-        }, 1000);
-
         function abrirWifi() { document.getElementById('modal-wifi').style.display = 'flex'; }
         function fecharWifi() { document.getElementById('modal-wifi').style.display = 'none'; }
+        
+        function exibirNotificacao() {
+            const notif = document.getElementById('notificacao-atendimento');
+            notif.style.display = 'block';
+            setTimeout(() => { notif.style.display = 'none'; }, 5000);
+        }
     </script>
 </body>
 </html>
