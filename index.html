@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <script src="https://tailwindcss.com"></script>
-    <title>Fatia's Control - Cliente</title>
+    <title>Fatia's Control - Natal</title>
     <style>
         @import url('https://googleapis.com');
 
@@ -17,10 +17,8 @@
         
         .painel-container {
             background-image: url('/fundo.jpg'); 
-            background-size: contain;
-            background-repeat: no-repeat;
-            background-position: center;
-            width: 100vw; height: 100vh;
+            background-size: contain; background-repeat: no-repeat;
+            background-position: center; width: 100vw; height: 100vh;
             position: relative;
         }
 
@@ -38,17 +36,10 @@
         }
 
         .btn-invisivel { background: transparent; border: none; outline: none; cursor: pointer; }
-        .btn-sistema { width: 70px; height: 50px; background: transparent; border: none; cursor: pointer; }
 
-        .controles-sistema {
-            position: absolute; bottom: 4%; left: 0; right: 0;
-            display: flex; justify-content: space-around; padding: 0 20%; z-index: 20;
-        }
-
-        /* NOTIFICAÇÃO PERSONALIZADA */
         #notificacao-atendimento {
             display: none; position: fixed; top: 20px; left: 50%; transform: translateX(-50%);
-            background: #1e40af; color: white; padding: 20px 30px; border-radius: 50px;
+            background: #1e40af; color: white; padding: 15px 30px; border-radius: 50px;
             font-weight: bold; box-shadow: 0 10px 20px rgba(0,0,0,0.5); z-index: 2000;
             border: 2px solid #3b82f6; text-align: center; width: 85%;
             animation: slideIn 0.4s ease-out;
@@ -56,7 +47,7 @@
         @keyframes slideIn { from { top: -100px; opacity: 0; } to { top: 20px; opacity: 1; } }
 
         #overlay-inicio { 
-            position: fixed; inset: 0; background: rgba(0,0,0,0.85); z-index: 9999; 
+            position: fixed; inset: 0; background: rgba(0,0,0,0.9); z-index: 9999; 
             display: flex; flex-direction: column; align-items: center; justify-content: center;
             backdrop-filter: blur(10px);
         }
@@ -64,34 +55,33 @@
             text-align: center; padding: 40px; border: 1px solid rgba(230, 185, 82, 0.3);
             border-radius: 40px; background: rgba(255, 255, 255, 0.03);
         }
-        .btn-iniciar-text {
-            color: #E6B952; font-weight: 900; font-size: 28px;
-            text-transform: uppercase; letter-spacing: 4px;
-            animation: pulse-gold 2s infinite;
-        }
+        .btn-iniciar-text { color: #E6B952; font-weight: 900; font-size: 28px; text-transform: uppercase; letter-spacing: 4px; animation: pulse-gold 2s infinite; }
+        
         @keyframes pulse-gold {
             0% { text-shadow: 0 0 10px rgba(230,185,82,0.2); transform: scale(1); }
             50% { text-shadow: 0 0 25px rgba(230,185,82,0.7); transform: scale(1.05); }
             100% { text-shadow: 0 0 10px rgba(230,185,82,0.2); transform: scale(1); }
         }
 
-        #modal-wifi {
-            display: none; position: fixed; inset: 0; 
-            background: rgba(0,0,0,0.95); z-index: 1000;
-            align-items: center; justify-content: center; backdrop-filter: blur(8px);
-        }
+        #modal-wifi { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.95); z-index: 1000; align-items: center; justify-content: center; backdrop-filter: blur(8px); }
+        #gps-error { display: none; position: fixed; inset: 0; background: #000; z-index: 10000; color: white; text-align: center; padding: 40px; flex-direction: column; align-items: center; justify-content: center; }
     </style>
 </head>
 <body>
 
-    <div id="notificacao-atendimento">
-        <span id="texto-feedback">✅ O GARÇOM ESTÁ A CAMINHO!</span>
+    <div id="gps-error">
+        <h2 class="text-red-500 font-bold text-2xl mb-4 uppercase">Acesso Bloqueado</h2>
+        <p id="gps-msg" class="opacity-70">Para sua segurança e uso do sistema, você deve estar fisicamente na Fatia's Natal e permitir o acesso à localização.</p>
+        <button onclick="window.location.reload()" class="mt-8 bg-[#E6B952] text-black px-8 py-3 rounded-full font-bold">TENTAR NOVAMENTE</button>
     </div>
 
-    <div id="overlay-inicio" onclick="iniciarSistema()">
+    <div id="notificacao-atendimento"><span id="texto-feedback">✅ O GARÇOM ESTÁ A CAMINHO!</span></div>
+
+    <div id="overlay-inicio" onclick="solicitarPermissao()">
         <div class="container-iniciar">
             <div class="btn-iniciar-text">INICIAR AGORA</div>
-            <div class="mt-4 text-[#E6B952] font-bold text-sm tracking-widest opacity-60">MESA <span id="label-mesa-inicio">--</span></div>
+            <div class="mt-4 text-[#E6B952] font-bold text-sm">MESA <span id="label-mesa-inicio">--</span></div>
+            <p class="mt-6 text-white/30 text-[9px] uppercase tracking-widest">Acesso restrito à loja (Raio 50m)</p>
         </div>
     </div>
 
@@ -103,22 +93,23 @@
             <button onclick="abrirWifi()" class="btn-invisivel"></button>
             <button onclick="confirmarEnvio('Cardápio')" class="btn-invisivel"></button>
         </div>
-        <div class="controles-sistema">
-            <button onclick="sair()" class="btn-sistema"></button>
-            <button onclick="minimizar()" class="btn-sistema"></button>
-        </div>
     </div>
 
-    <div id="modal-wifi">
-        <div class="bg-[#111] border-2 border-[#E6B952] p-10 rounded-[30px] text-center text-white w-[85%]">
-            <h2 style="color:#E6B952; font-weight: bold; margin-bottom: 10px;">WI-FI LIBERADO</h2>
-            <p style="font-size: 10px; opacity: 0.5;">REDE: fatias cliente</p>
-            <h1 style="font-size: 32px; font-weight: 900; margin: 15px 0;">fatias2025</h1>
-            <button onclick="fecharWifi()" class="border border-red-500 text-red-500 px-6 py-2 rounded-full font-bold text-[10px] uppercase">Fechar [X]</button>
+    <div id="modal-wifi" class="hidden">
+         <div class="bg-[#111] border-2 border-[#E6B952] p-10 rounded-[30px] text-center text-white w-[85%]">
+            <h2 class="text-[#E6B952] font-bold mb-4 uppercase">Wi-Fi</h2>
+            <p class="text-xs opacity-50 mb-1">REDE: fatias cliente</p>
+            <h1 class="text-3xl font-black mb-6">fatias2025</h1>
+            <button onclick="fecharWifi()" class="text-red-500 font-bold border border-red-500 px-6 py-1 rounded-full text-xs">FECHAR</button>
         </div>
     </div>
 
     <script>
+        // --- CONFIGURAÇÃO GEOGRÁFICA ---
+        const RESTAURANTE_LAT = -5.8858; 
+        const RESTAURANTE_LON = -35.1741; 
+        const DISTANCIA_MAXIMA = 0.05; // AJUSTADO PARA 50 METROS
+
         const pathParts = window.location.pathname.split('/');
         const mesa = pathParts[pathParts.length - 1] || "01";
         document.getElementById('label-mesa-inicio').innerText = mesa;
@@ -126,7 +117,33 @@
 
         const somAlerta = new Audio('/suave.mp3');
         let atendidoAnteriormente = false;
-        let ultimoPedido = "Garçom"; 
+        let ultimoPedido = "Garçom";
+
+        function calcularDistancia(lat1, lon1, lat2, lon2) {
+            const R = 6371; 
+            const dLat = (lat2 - lat1) * Math.PI / 180;
+            const dLon = (lon2 - lon1) * Math.PI / 180;
+            const a = Math.sin(dLat/2) * Math.sin(dLat/2) + Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * Math.sin(dLon/2) * Math.sin(dLon/2);
+            const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+            return R * c;
+        }
+
+        function solicitarPermissao() {
+            if ("geolocation" in navigator) {
+                navigator.geolocation.getCurrentPosition(
+                    (position) => {
+                        const dist = calcularDistancia(position.coords.latitude, position.coords.longitude, RESTAURANTE_LAT, RESTAURANTE_LON);
+                        if (dist <= DISTANCIA_MAXIMA) { iniciarSistema(); } 
+                        else { 
+                            document.getElementById('gps-msg').innerText = "Acesso negado. Você está a " + (dist * 1000).toFixed(0) + " metros da Fatia's Natal."; 
+                            document.getElementById('gps-error').style.display = 'flex'; 
+                        }
+                    },
+                    () => { document.getElementById('gps-msg').innerText = "Localização necessária. Ative o GPS e permita o acesso para pedir na sua mesa."; document.getElementById('gps-error').style.display = 'flex'; },
+                    { enableHighAccuracy: true }
+                );
+            }
+        }
 
         function iniciarSistema() {
             somAlerta.play().then(() => { somAlerta.pause(); somAlerta.currentTime = 0; });
@@ -134,55 +151,29 @@
             document.getElementById('overlay-inicio').style.display = 'none';
         }
 
-        function abrirWifi() { document.getElementById('modal-wifi').style.display = 'flex'; }
-        function fecharWifi() { document.getElementById('modal-wifi').style.display = 'none'; }
-
-        function sair() { if(confirm("Encerrar mesa " + mesa + "?")) window.location.href = "about:blank"; }
-        function minimizar() { 
-            if(document.exitFullscreen) document.exitFullscreen().catch(()=>{}); 
-            document.getElementById('overlay-inicio').style.display = 'flex'; 
-        }
-
         function confirmarEnvio(acao) {
             if(confirm(`Confirmar chamado de ${acao}?`)) {
-                ultimoPedido = acao; // Salva o tipo do pedido
-                fetch('/enviar-chamado', {
-                    method: 'POST',
-                    headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify({ mesa: mesa, acao: acao })
-                });
+                ultimoPedido = acao;
+                fetch('/enviar-chamado', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ mesa: mesa, acao: acao }) });
             }
         }
 
         setInterval(() => {
             fetch(`/status-atendimento/${mesa}`).then(res => res.json()).then(dados => {
                 if (dados.atendido && !atendidoAnteriormente) {
-                    somAlerta.currentTime = 0;
-                    somAlerta.play();
-                    
+                    somAlerta.currentTime = 0; somAlerta.play();
                     const spanTexto = document.getElementById('texto-feedback');
                     const note = document.getElementById('notificacao-atendimento');
-                    
-                    // Personaliza a mensagem baseada no último pedido
-                    if (ultimoPedido === "Conta") {
-                        spanTexto.innerText = "✅ A CONTA ESTÁ A CAMINHO!";
-                    } else if (ultimoPedido === "Cardápio") {
-                        spanTexto.innerText = "✅ O CARDÁPIO ESTÁ A CAMINHO!";
-                    } else {
-                        spanTexto.innerText = "✅ O GARÇOM ESTÁ A CAMINHO!";
-                    }
-
-                    note.style.display = 'block';
-                    setTimeout(() => { note.style.display = 'none'; }, 6000);
-                    
+                    spanTexto.innerText = ultimoPedido === "Conta" ? "✅ A CONTA ESTÁ A CAMINHO!" : "✅ O GARÇOM ESTÁ A CAMINHO!";
+                    note.style.display = 'block'; setTimeout(() => { note.style.display = 'none'; }, 6000);
                     atendidoAnteriormente = true;
                 } 
-                
-                if (!dados.atendido) {
-                    atendidoAnteriormente = false;
-                }
+                if (!dados.atendido) atendidoAnteriormente = false;
             });
         }, 1000);
+
+        function abrirWifi() { document.getElementById('modal-wifi').style.display = 'flex'; }
+        function fecharWifi() { document.getElementById('modal-wifi').style.display = 'none'; }
     </script>
 </body>
 </html>
