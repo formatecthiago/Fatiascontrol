@@ -106,8 +106,8 @@
 
     <script>
         // --- CONFIGURAÇÃO GEOGRÁFICA ATUALIZADA ---
-        const RESTAURANTE_LAT = -5.87188; 
-        const RESTAURANTE_LON = -35.1816; 
+        const RESTAURANTE_LAT = -5.87639; 
+        const RESTAURANTE_LON = -35.18111; 
         const DISTANCIA_MAXIMA = 0.05; // 50 METROS
 
         const pathParts = window.location.pathname.split('/');
@@ -116,9 +116,7 @@
         document.getElementById('num-mesa-painel').innerText = mesa;
 
         const somAlerta = new Audio('/suave.mp3');
-        let atendidoAnteriormente = false;
-        let ultimoPedido = "Garçom";
-
+        
         function calcularDistancia(lat1, lon1, lat2, lon2) {
             const R = 6371; 
             const dLat = (lat2 - lat1) * Math.PI / 180;
@@ -133,39 +131,47 @@
                 navigator.geolocation.getCurrentPosition(
                     (position) => {
                         const dist = calcularDistancia(position.coords.latitude, position.coords.longitude, RESTAURANTE_LAT, RESTAURANTE_LON);
-                        if (dist <= DISTANCIA_MAXIMA) { iniciarSistema(); } 
-                        else { 
+                        if (dist <= DISTANCIA_MAXIMA) { 
+                            iniciarSistema(); 
+                        } else { 
                             document.getElementById('gps-msg').innerText = "Acesso negado. Você está a " + (dist * 1000).toFixed(0) + " metros da Fatia's Natal."; 
                             document.getElementById('gps-error').style.display = 'flex'; 
                         }
                     },
-                    () => { document.getElementById('gps-msg').innerText = "Localização necessária. Ative o GPS e permita o acesso para pedir na sua mesa."; document.getElementById('gps-error').style.display = 'flex'; },
+                    () => { 
+                        document.getElementById('gps-msg').innerText = "Localização necessária. Ative o GPS e permita o acesso para pedir na sua mesa."; 
+                        document.getElementById('gps-error').style.display = 'flex'; 
+                    },
                     { enableHighAccuracy: true }
                 );
             }
         }
 
         function iniciarSistema() {
-            somAlerta.play().then(() => { somAlerta.pause(); somAlerta.currentTime = 0; });
-            document.documentElement.requestFullscreen().catch(() => {});
+            somAlerta.play().then(() => { somAlerta.pause(); somAlerta.currentTime = 0; }).catch(() => {});
             document.getElementById('overlay-inicio').style.display = 'none';
         }
 
         function confirmarEnvio(acao) {
             if(confirm(`Confirmar chamado de ${acao}?`)) {
-                ultimoPedido = acao;
                 fetch('/enviar-chamado', { 
                     method: 'POST', 
                     headers: {'Content-Type': 'application/json'}, 
                     body: JSON.stringify({ mesa: mesa, acao: acao }) 
+                }).then(() => {
+                    exibirNotificacao();
                 });
-                exibirNotificacao();
             }
         }
 
-        function abrirWifi() { document.getElementById('modal-wifi').style.display = 'flex'; }
-        function fecharWifi() { document.getElementById('modal-wifi').style.display = 'none'; }
-        
+        function abrirWifi() { 
+            document.getElementById('modal-wifi').style.display = 'flex'; 
+        }
+
+        function fecharWifi() { 
+            document.getElementById('modal-wifi').style.display = 'none'; 
+        }
+
         function exibirNotificacao() {
             const notif = document.getElementById('notificacao-atendimento');
             notif.style.display = 'block';
