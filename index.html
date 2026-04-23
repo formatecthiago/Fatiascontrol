@@ -2,97 +2,150 @@
 <html lang="pt-br">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <script src="https://tailwindcss.com"></script>
-    <title>Painel Mapa Control</title>
+    <title>Fatia's Control - Natal</title>
     <style>
-        body { background: #000; color: #fff; font-family: sans-serif; overflow-x: hidden; }
-        .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(90px, 1fr)); gap: 8px; }
-        .m { background: #064e3b; border: 1px solid #065f46; height: 120px; border-radius: 8px; }
-        .ativa { background: #b91c1c !important; border-color: #f87171; animation: pulse 1s infinite; }
-        @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.6; } 100% { opacity: 1; } }
-        #setup-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #000; z-index: 9999; display: flex; align-items: center; justify-content: center; cursor: pointer; }
+        @import url('https://googleapis.com');
+        body, html { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; background-color: #000; display: flex; justify-content: center; align-items: center; font-family: 'Montserrat', sans-serif; }
+        .painel-container { background-image: url('/fundo.jpg'); background-size: contain; background-repeat: no-repeat; background-position: center; width: 100vw; height: 100vh; position: relative; }
+        .etiqueta-mesa { position: absolute; top: 36%; left: 14%; padding: 5px 15px; border: 2px solid #E6B952; border-radius: 10px; color: #E6B952; font-weight: 900; font-size: 14px; text-transform: uppercase; background: rgba(0,0,0,0.3); z-index: 15; }
+        
+        /* ÁREA DE TOQUE AJUSTADA (1CM PARA CIMA) */
+        .grade-toque { 
+            position: absolute; top: 40%; bottom: 24%; left: 12%; right: 12%; 
+            display: grid; grid-template-columns: 1fr 1fr; grid-template-rows: 1fr 1fr; gap: 20px; z-index: 10; 
+        }
+        .btn-acao { background: transparent; border: none; outline: none; cursor: pointer; display: block; width: 100%; height: 100%; }
+
+        #notificacao-atendimento { display: none; position: fixed; top: 20px; left: 50%; transform: translateX(-50%); background: #1e40af; color: white; padding: 15px 30px; border-radius: 50px; font-weight: bold; box-shadow: 0 10px 20px rgba(0,0,0,0.5); z-index: 5000; border: 2px solid #3b82f6; text-align: center; width: 85%; animation: slideIn 0.4s ease-out; }
+        @keyframes slideIn { from { top: -100px; opacity: 0; } to { top: 20px; opacity: 1; } }
+        #modal-wifi { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.85); z-index: 9999; align-items: center; justify-content: center; backdrop-filter: blur(10px); }
+        .balao-wifi { background: #111; border: 2px solid #E6B952; padding: 40px 20px; border-radius: 30px; text-align: center; color: white; width: 80%; box-shadow: 0 0 30px rgba(230, 185, 82, 0.2); }
+        #overlay-inicio { position: fixed; inset: 0; background: rgba(0,0,0,0.9); z-index: 8000; display: flex; flex-direction: column; align-items: center; justify-content: center; backdrop-filter: blur(10px); }
+        .container-iniciar { text-align: center; padding: 40px; border: 1px solid rgba(230, 185, 82, 0.3); border-radius: 40px; background: rgba(255, 255, 255, 0.03); }
+        .btn-iniciar-text { color: #E6B952; font-weight: 900; font-size: 28px; text-transform: uppercase; letter-spacing: 4px; animation: pulse-gold 2s infinite; }
+        @keyframes pulse-gold { 0% { text-shadow: 0 0 10px rgba(230,185,82,0.2); transform: scale(1); } 50% { text-shadow: 0 0 25px rgba(230,185,82,0.7); transform: scale(1.05); } 100% { text-shadow: 0 0 10px rgba(230,185,82,0.2); transform: scale(1); } }
+        #gps-error { display: none; position: fixed; inset: 0; background: #000; z-index: 10000; color: white; text-align: center; padding: 40px; flex-direction: column; align-items: center; justify-content: center; }
     </style>
 </head>
-<body class="p-4">
-    <!-- O clique aqui "destrava" o som no navegador -->
-    <div id="setup-overlay" onclick="ativarPainel()">
-        <div class="px-8 py-4 border-2 border-[#E6B952] rounded-full animate-pulse font-bold text-[#E6B952]">ATIVAR MONITORAMENTO</div>
+<body>
+    <div id="gps-error">
+        <h2 class="text-red-500 font-bold text-2xl mb-4 uppercase">Acesso Bloqueado</h2>
+        <p id="gps-msg" class="opacity-70">Para sua segurança, você deve estar na Fatia's Natal.</p>
+        <button onclick="window.location.reload()" class="mt-8 bg-[#E6B952] text-black px-8 py-3 rounded-full font-bold">TENTAR NOVAMENTE</button>
     </div>
 
-    <header class="flex justify-between items-center mb-4">
-        <h1 class="text-xl font-bold uppercase">MAPA <span style="color:#E6B952">FATIAS CONTROL</span></h1>
-        <div class="flex gap-2">
-            <button onclick="minimizar()" class="bg-gray-800 p-2 rounded text-[10px] uppercase font-bold">Minimizar</button>
-            <button onclick="sair()" class="bg-red-900 p-2 rounded text-[10px] uppercase font-bold">Sair</button>
+    <div id="notificacao-atendimento"><span id="texto-feedback">--</span></div>
+
+    <div id="overlay-inicio" onclick="solicitarPermissao()">
+        <div class="container-iniciar">
+            <div class="btn-iniciar-text">INICIAR AGORA</div>
+            <div class="mt-4 text-[#E6B952] font-bold text-sm">MESA <span id="label-mesa-inicio">--</span></div>
+            <p class="mt-6 text-white/30 text-[9px] uppercase tracking-widest">Acesso restrito à loja</p>
         </div>
-    </header>
-    
-    <div id="grid" class="grid"></div>
-    <audio id="som" src="/alerta.mp3" preload="auto"></audio>
+    </div>
+
+    <div class="painel-container">
+        <div class="etiqueta-mesa">MESA <span id="num-mesa-painel">--</span></div>
+        <div class="grade-toque">
+            <button onclick="confirmarEnvio('Garçom')" class="btn-acao"></button>
+            <button onclick="confirmarEnvio('Conta')" class="btn-acao"></button>
+            <button onclick="abrirWifi()" class="btn-acao"></button>
+            <a href="https://linktr.ee" target="_blank" rel="noopener noreferrer" class="btn-acao"></a>
+        </div>
+    </div>
+
+    <div id="modal-wifi">
+         <div class="balao-wifi">
+            <h2 class="text-[#E6B952] font-bold mb-6 uppercase tracking-widest">Wi-Fi Clientes</h2>
+            <p class="text-[10px] uppercase opacity-40 mb-1">Rede: fatias cliente</p>
+            <h1 class="text-3xl font-black text-[#E6B952] mb-8">fatias2025</h1>
+            <button onclick="fecharWifi()" class="bg-white/10 text-white px-10 py-3 rounded-full text-xs font-bold uppercase border border-white/20">Fechar</button>
+        </div>
+    </div>
 
     <script>
-        let ultimoTotal = 0;
-        const som = document.getElementById('som');
+        const LOCAIS_PERMITIDOS = [
+            { lat: -5.890425, lon: -35.169790 }, 
+            { lat: -5.87639, lon: -35.18111 }    
+        ];
+        const DISTANCIA_MAXIMA = 0.08; 
 
-        // Esta função garante que o som seja carregado e liberado pelo navegador
-        function ativarPainel() {
-            som.play().then(() => {
-                som.pause();
-                som.currentTime = 0;
-            }).catch(e => console.log("Aguardando interação para áudio"));
-            
-            document.documentElement.requestFullscreen().catch(() => {});
-            document.getElementById('setup-overlay').style.display = 'none';
-            atualizar(); // Inicia a primeira atualização imediatamente
+        const pathParts = window.location.pathname.split('/');
+        const mesa = pathParts[pathParts.length - 1] || "01";
+        document.getElementById('label-mesa-inicio').innerText = mesa;
+        document.getElementById('num-mesa-painel').innerText = mesa;
+
+        const somFeedback = new Audio('/suave.mp3');
+        let monitoramentoStatus = null;
+        let tipoPedidoAtual = "";
+
+        function calcularDistancia(lat1, lon1, lat2, lon2) {
+            const R = 6371; 
+            const dLat = (lat2 - lat1) * Math.PI / 180;
+            const dLon = (lon2 - lon1) * Math.PI / 180;
+            const a = Math.sin(dLat/2) * Math.sin(dLat/2) + Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * Math.sin(dLon/2) * Math.sin(dLon/2);
+            return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
         }
 
-        function minimizar() {
-            if (document.exitFullscreen) document.exitFullscreen().catch(() => {});
-            document.getElementById('setup-overlay').style.display = 'flex';
+        function solicitarPermissao() {
+            if ("geolocation" in navigator) {
+                navigator.geolocation.getCurrentPosition((pos) => {
+                    const estaPerto = LOCAIS_PERMITIDOS.some(local => 
+                        calcularDistancia(pos.coords.latitude, pos.coords.longitude, local.lat, local.lon) <= DISTANCIA_MAXIMA
+                    );
+                    if (estaPerto) { iniciarSistema(); } 
+                    else { 
+                        document.getElementById('gps-msg').innerText = "Acesso negado. Você está fora do raio da unidade."; 
+                        document.getElementById('gps-error').style.display = 'flex'; 
+                    }
+                }, () => { 
+                    document.getElementById('gps-msg').innerText = "Ative o GPS para continuar."; 
+                    document.getElementById('gps-error').style.display = 'flex'; 
+                }, { enableHighAccuracy: true });
+            }
         }
 
-        function sair() {
-            if(confirm("Encerrar painel controlador?")) window.location.href = "about:blank";
+        function iniciarSistema() {
+            somFeedback.play().then(() => { somFeedback.pause(); somFeedback.currentTime = 0; }).catch(() => {});
+            document.getElementById('overlay-inicio').style.display = 'none';
         }
 
-        function atualizar() {
-            fetch('/obter-estado-geral').then(res => res.json()).then(mesas => {
-                const grid = document.getElementById('grid');
-                grid.innerHTML = '';
-                let totalAgora = 0;
-
-                for(let i=1; i<=50; i++) {
-                    const m = mesas[i];
-                    // Soma a quantidade apenas de mesas que estão ATIVAS (pedindo algo)
-                    if(m.ativa) totalAgora += m.quantidade;
-
-                    const div = document.createElement('div');
-                    div.className = `m p-2 flex flex-col items-center justify-between ${m.ativa ? 'ativa' : ''}`;
-                    div.innerHTML = `
-                        <span class="text-[10px] font-bold">MESA ${i}</span>
-                        ${m.ativa ? `
-                        <span class="text-[8px] uppercase text-center font-bold">${m.acao}<br>(${m.quantidade}x)</span>
-                        <div class="flex flex-col gap-1 w-full">
-                            <button onclick="atender(${i})" class="bg-blue-600 text-[8px] p-1 rounded font-bold uppercase">OK</button>
-                            <button onclick="limpar(${i})" class="bg-black text-[8px] p-1 rounded border border-gray-600 uppercase">Limpar</button>
-                        </div>` : '<span class="text-[8px] opacity-40">LIVRE</span>'} `;
-                    grid.appendChild(div);
-                }
-
-                // Se o número de pedidos aumentou, toca o som
-                if(totalAgora > ultimoTotal) {
-                    som.currentTime = 0;
-                    som.play().catch(e => console.log("Erro ao tocar som:", e));
-                }
-                ultimoTotal = totalAgora;
-            });
+        function confirmarEnvio(acao) {
+            if(confirm(`Confirmar chamado de ${acao}?`)) {
+                tipoPedidoAtual = acao;
+                fetch('/enviar-chamado', { 
+                    method: 'POST', 
+                    headers: {'Content-Type': 'application/json'}, 
+                    body: JSON.stringify({ mesa: mesa, acao: acao }) 
+                }).then(() => {
+                    document.getElementById('texto-feedback').innerText = "⏳ ENVIADO! AGUARDANDO...";
+                    document.getElementById('notificacao-atendimento').style.display = 'block';
+                    document.getElementById('notificacao-atendimento').style.backgroundColor = "#1e40af";
+                    iniciarVigilancia();
+                });
+            }
         }
 
-        function atender(n) { fetch('/atender/'+n, {method:'POST'}).then(atualizar); }
-        function limpar(n) { fetch('/limpar/'+n, {method:'POST'}).then(atualizar); }
-        
-        // Intervalo de 3 segundos para não sobrecarregar o servidor
-        setInterval(atualizar, 3000);
+        function iniciarVigilancia() {
+            if (monitoramentoStatus) clearInterval(monitoramentoStatus);
+            monitoramentoStatus = setInterval(() => {
+                fetch(`/status-atendimento/${mesa}`).then(res => res.json()).then(data => {
+                    if (data.atendido) {
+                        somFeedback.play().catch(() => {});
+                        const msg = (tipoPedidoAtual === "Garçom") ? "✅ O GARÇOM ESTÁ A CAMINHO!" : "✅ A CONTA ESTÁ VINDO!";
+                        document.getElementById('texto-feedback').innerText = msg;
+                        document.getElementById('notificacao-atendimento').style.backgroundColor = "#059669";
+                        clearInterval(monitoramentoStatus);
+                        setTimeout(() => { document.getElementById('notificacao-atendimento').style.display = 'none'; }, 6000);
+                    }
+                });
+            }, 2500);
+        }
+
+        function abrirWifi() { document.getElementById('modal-wifi').style.display = 'flex'; }
+        function fecharWifi() { document.getElementById('modal-wifi').style.display = 'none'; }
     </script>
 </body>
 </html>
