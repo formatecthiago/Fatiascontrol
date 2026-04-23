@@ -23,11 +23,11 @@
             background: rgba(0,0,0,0.3); z-index: 15; 
         }
 
-        /* ÁREA DE TOQUE DESLOCADA 1CM PARA CIMA */
+        /* ÁREA DE TOQUE AJUSTADA 1CM PARA CIMA */
         .grade-toque { 
             position: absolute; 
-            top: 40%;    /* Reduzido de 46% para 40% (Sobe a grade) */
-            bottom: 24%; /* Aumentado de 18% para 24% (Sobe a base) */
+            top: 40%;    
+            bottom: 24%; 
             left: 12%; 
             right: 12%; 
             display: grid; 
@@ -76,17 +76,14 @@
             <button onclick="confirmarEnvio('Garçom')" class="btn-acao"></button>
             <button onclick="confirmarEnvio('Conta')" class="btn-acao"></button>
             <button onclick="abrirWifi()" class="btn-acao"></button>
-            <!-- LINK DO LINKTREE ATUALIZADO -->
-            <a href="https://linktr.ee/Fatiasnatal" target="_blank" rel="noopener noreferrer" class="btn-acao"></a>
+            <a href="https://linktr.ee" target="_blank" rel="noopener noreferrer" class="btn-acao"></a>
         </div>
     </div>
 
     <div id="modal-wifi">
          <div class="balao-wifi">
             <h2 class="text-[#E6B952] font-bold mb-6 uppercase tracking-widest">Wi-Fi Clientes</h2>
-            <p class="text-[10px] uppercase opacity-40 mb-1">Nome da Rede</p>
-            <h1 class="text-xl font-bold mb-6">fatias cliente</h1>
-            <p class="text-[10px] uppercase opacity-40 mb-1">Senha</p>
+            <p class="text-[10px] uppercase opacity-40 mb-1">Rede: fatias cliente</p>
             <h1 class="text-3xl font-black text-[#E6B952] mb-8">fatias2025</h1>
             <button onclick="fecharWifi()" class="bg-white/10 text-white px-10 py-3 rounded-full text-xs font-bold uppercase border border-white/20">Fechar</button>
         </div>
@@ -142,14 +139,24 @@
         function confirmarEnvio(acao) {
             if(confirm(`Confirmar chamado de ${acao}?`)) {
                 tipoPedidoAtual = acao;
+
+                // LIMPA QUALQUER ESTADO ANTERIOR PARA O NOVO CHAMADO APARECER
+                if (monitoramentoStatus) clearInterval(monitoramentoStatus);
+                const notif = document.getElementById('notificacao-atendimento');
+                const texto = document.getElementById('texto-feedback');
+                
+                notif.style.display = 'none'; 
+                setTimeout(() => {
+                    texto.innerText = "⏳ ENVIADO! AGUARDANDO...";
+                    notif.style.backgroundColor = "#1e40af"; 
+                    notif.style.display = 'block';
+                }, 50);
+
                 fetch('/enviar-chamado', { 
                     method: 'POST', 
                     headers: {'Content-Type': 'application/json'}, 
                     body: JSON.stringify({ mesa: mesa, acao: acao }) 
                 }).then(() => {
-                    document.getElementById('texto-feedback').innerText = "⏳ ENVIADO! AGUARDANDO...";
-                    document.getElementById('notificacao-atendimento').style.display = 'block';
-                    document.getElementById('notificacao-atendimento').style.backgroundColor = "#1e40af";
                     iniciarVigilancia();
                 });
             }
