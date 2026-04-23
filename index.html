@@ -8,10 +8,38 @@
     <style>
         @import url('https://googleapis.com');
         body, html { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; background-color: #000; display: flex; justify-content: center; align-items: center; font-family: 'Montserrat', sans-serif; }
-        .painel-container { background-image: url('/fundo.jpg'); background-size: contain; background-repeat: no-repeat; background-position: center; width: 100vw; height: 100vh; position: relative; }
-        .etiqueta-mesa { position: absolute; top: 36%; left: 14%; padding: 5px 15px; border: 2px solid #E6B952; border-radius: 10px; color: #E6B952; font-weight: 900; font-size: 14px; text-transform: uppercase; background: rgba(0,0,0,0.3); z-index: 15; }
-        .grade-toque { position: absolute; top: 45%; left: 14%; right: 14%; bottom: 15%; display: grid; grid-template-columns: 1fr 1fr; grid-template-rows: 1fr 1fr; gap: 15px; z-index: 10; }
-        .btn-invisivel { background: transparent; border: none; outline: none; cursor: pointer; }
+        
+        .painel-container { 
+            background-image: url('/fundo.jpg'); 
+            background-size: contain; background-repeat: no-repeat;
+            background-position: center; width: 100vw; height: 100vh;
+            position: relative;
+        }
+
+        .etiqueta-mesa { 
+            position: absolute; top: 36%; left: 14%; padding: 5px 15px; 
+            border: 2px solid #E6B952; border-radius: 10px; color: #E6B952; 
+            font-weight: 900; font-size: 14px; text-transform: uppercase; 
+            background: rgba(0,0,0,0.3); z-index: 15; 
+        }
+
+        /* ÁREA DE TOQUE AJUSTADA */
+        .grade-toque { 
+            position: absolute; 
+            top: 46%; /* Baixado levemente para descolar do topo */
+            left: 12%; 
+            right: 12%; 
+            bottom: 18%; /* Subido levemente para descolar do rodapé */
+            display: grid; 
+            grid-template-columns: 1fr 1fr; 
+            grid-template-rows: 1fr 1fr; 
+            gap: 25px; /* Aumentado o espaço entre botões para evitar toques duplos */
+            z-index: 10; 
+        }
+
+        .btn-invisivel { background: transparent; border: none; outline: none; cursor: pointer; border-radius: 15px; }
+        /* Dica: se quiser ver a área do clique para testar, mude o background acima para rgba(255,255,255,0.1) */
+
         #notificacao-atendimento { display: none; position: fixed; top: 20px; left: 50%; transform: translateX(-50%); background: #1e40af; color: white; padding: 15px 30px; border-radius: 50px; font-weight: bold; box-shadow: 0 10px 20px rgba(0,0,0,0.5); z-index: 2000; border: 2px solid #3b82f6; text-align: center; width: 85%; animation: slideIn 0.4s ease-out; }
         @keyframes slideIn { from { top: -100px; opacity: 0; } to { top: 20px; opacity: 1; } }
         #overlay-inicio { position: fixed; inset: 0; background: rgba(0,0,0,0.9); z-index: 9999; display: flex; flex-direction: column; align-items: center; justify-content: center; backdrop-filter: blur(10px); }
@@ -43,18 +71,13 @@
     <div class="painel-container">
         <div class="etiqueta-mesa">MESA <span id="num-mesa-painel">--</span></div>
         <div class="grade-toque">
-            <!-- CHAMAR GARÇOM -->
             <button onclick="confirmarEnvio('Garçom')" class="btn-invisivel"></button>
-            <!-- PEDIR CONTA -->
             <button onclick="confirmarEnvio('Conta')" class="btn-invisivel"></button>
-            <!-- WI-FI (Apenas abre o modal local) -->
             <button onclick="abrirWifi()" class="btn-invisivel"></button>
-            <!-- CARDÁPIO (Apenas abre link externo) -->
             <button onclick="window.open('https://linktr.ee', '_blank')" class="btn-invisivel"></button>
         </div>
     </div>
 
-    <!-- MODAL WI-FI CORRIGIDO -->
     <div id="modal-wifi">
          <div class="bg-[#111] border-2 border-[#E6B952] p-10 rounded-[30px] text-center text-white w-[85%]">
             <h2 class="text-[#E6B952] font-bold mb-4 uppercase">Conectar Wi-Fi</h2>
@@ -135,13 +158,9 @@
                 fetch(`/status-atendimento/${mesa}`).then(res => res.json()).then(data => {
                     if (data.atendido) {
                         somFeedback.play().catch(() => {});
-                        
-                        // Define o texto baseado no que foi pedido
                         const msg = (tipoPedidoAtual === "Garçom") ? "✅ O GARÇOM ESTÁ A CAMINHO!" : "✅ A CONTA ESTÁ VINDO!";
-                        
                         document.getElementById('texto-feedback').innerText = msg;
                         document.getElementById('notificacao-atendimento').style.backgroundColor = "#059669";
-                        
                         clearInterval(monitoramentoStatus);
                         setTimeout(() => { document.getElementById('notificacao-atendimento').style.display = 'none'; }, 6000);
                     }
