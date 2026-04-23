@@ -10,41 +10,35 @@
         .m { background: #064e3b; border: 1px solid #065f46; height: 120px; border-radius: 8px; }
         .ativa { background: #b91c1c !important; border-color: #f87171; animation: pulse 1s infinite; }
         @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.6; } 100% { opacity: 1; } }
-        #setup-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #000; z-index: 9999; display: flex; align-items: center; justify-content: center; }
+        #setup-overlay { position: fixed; inset: 0; background: #000; z-index: 9999; display: flex; align-items: center; justify-content: center; cursor: pointer; }
     </style>
 </head>
 <body class="p-4">
-    <div id="setup-overlay" onclick="ativarTelaCheia()">
-        <div class="px-8 py-4 border-2 border-[#E6B952] rounded-full animate-pulse font-bold text-[#E6B952]">ATIVAR MONITORAMENTO</div>
+    <!-- Camada necessária para liberar o som no navegador -->
+    <div id="setup-overlay" onclick="ativarPainel()">
+        <div class="px-8 py-4 border-2 border-[#E6B952] rounded-full animate-pulse font-bold text-[#E6B952]">ATIVAR MONITORAMENTO E SOM</div>
     </div>
 
     <header class="flex justify-between items-center mb-4">
         <h1 class="text-xl font-bold uppercase">MAPA <span style="color:#E6B952">FATIAS CONTROL</span></h1>
-        <div class="flex gap-2">
-            <button onclick="minimizar()" class="bg-gray-800 p-2 rounded text-[10px] uppercase font-bold">Minimizar</button>
-            <button onclick="sair()" class="bg-red-900 p-2 rounded text-[10px] uppercase font-bold">Sair</button>
-        </div>
     </header>
     
     <div id="grid" class="grid"></div>
-    <audio id="som" src="/alerta.mp3"></audio>
+    <audio id="som" src="/alerta.mp3" preload="auto"></audio>
 
     <script>
         let ultimoTotal = 0;
         const som = document.getElementById('som');
 
-        function ativarTelaCheia() {
-            document.documentElement.requestFullscreen().catch(() => {});
+        function ativarPainel() {
+            // Destrava o áudio
+            som.play().then(() => {
+                som.pause();
+                som.currentTime = 0;
+            }).catch(() => {});
+            
             document.getElementById('setup-overlay').style.display = 'none';
-        }
-
-        function minimizar() {
-            if (document.exitFullscreen) document.exitFullscreen().catch(() => {});
-            document.getElementById('setup-overlay').style.display = 'flex';
-        }
-
-        function sair() {
-            if(confirm("Encerrar painel controlador?")) window.location.href = "about:blank";
+            atualizar();
         }
 
         function atualizar() {
@@ -52,9 +46,11 @@
                 const grid = document.getElementById('grid');
                 grid.innerHTML = '';
                 let totalAgora = 0;
+
                 for(let i=1; i<=50; i++) {
                     const m = mesas[i];
-                    totalAgora += m.quantidade;
+                    if(m.ativa) totalAgora += m.quantidade;
+
                     const div = document.createElement('div');
                     div.className = `m p-2 flex flex-col items-center justify-between ${m.ativa ? 'ativa' : ''}`;
                     div.innerHTML = `
@@ -67,11 +63,19 @@
                         </div>` : '<span class="text-[8px] opacity-40">LIVRE</span>'} `;
                     grid.appendChild(div);
                 }
-                if(totalAgora > ultimoTotal) { som.play().catch(()=>{}); ultimoTotal = totalAgora; }
+
+                // Se houver novos chamados, toca o som
+                if(totalAgora > ultimoTotal) {
+                    som.currentTime = 0;
+                    som.play().catch(e => console.log("Erro som:", e));
+                }
+                ultimoTotal = totalAgora;
             });
         }
+
         function atender(n) { fetch('/atender/'+n, {method:'POST'}).then(atualizar); }
         function limpar(n) { fetch('/limpar/'+n, {method:'POST'}).then(atualizar); }
+        
         setInterval(atualizar, 3000);
     </script>
 </body>
