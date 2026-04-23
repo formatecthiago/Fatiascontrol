@@ -23,29 +23,31 @@
             background: rgba(0,0,0,0.3); z-index: 15; 
         }
 
-        /* ÁREA DE TOQUE AJUSTADA */
+        /* AJUSTE DAS ÁREAS DE TOQUE PARA NÃO SOBREPOR */
         .grade-toque { 
             position: absolute; 
-            top: 46%; /* Baixado levemente para descolar do topo */
+            top: 46%; 
             left: 12%; 
             right: 12%; 
-            bottom: 18%; /* Subido levemente para descolar do rodapé */
+            bottom: 18%; 
             display: grid; 
             grid-template-columns: 1fr 1fr; 
             grid-template-rows: 1fr 1fr; 
-            gap: 25px; /* Aumentado o espaço entre botões para evitar toques duplos */
+            gap: 20px; 
             z-index: 10; 
         }
 
         .btn-invisivel { background: transparent; border: none; outline: none; cursor: pointer; border-radius: 15px; }
-        /* Dica: se quiser ver a área do clique para testar, mude o background acima para rgba(255,255,255,0.1) */
 
         #notificacao-atendimento { display: none; position: fixed; top: 20px; left: 50%; transform: translateX(-50%); background: #1e40af; color: white; padding: 15px 30px; border-radius: 50px; font-weight: bold; box-shadow: 0 10px 20px rgba(0,0,0,0.5); z-index: 2000; border: 2px solid #3b82f6; text-align: center; width: 85%; animation: slideIn 0.4s ease-out; }
         @keyframes slideIn { from { top: -100px; opacity: 0; } to { top: 20px; opacity: 1; } }
+        
         #overlay-inicio { position: fixed; inset: 0; background: rgba(0,0,0,0.9); z-index: 9999; display: flex; flex-direction: column; align-items: center; justify-content: center; backdrop-filter: blur(10px); }
         .container-iniciar { text-align: center; padding: 40px; border: 1px solid rgba(230, 185, 82, 0.3); border-radius: 40px; background: rgba(255, 255, 255, 0.03); }
         .btn-iniciar-text { color: #E6B952; font-weight: 900; font-size: 28px; text-transform: uppercase; letter-spacing: 4px; animation: pulse-gold 2s infinite; }
+        
         @keyframes pulse-gold { 0% { text-shadow: 0 0 10px rgba(230,185,82,0.2); transform: scale(1); } 50% { text-shadow: 0 0 25px rgba(230,185,82,0.7); transform: scale(1.05); } 100% { text-shadow: 0 0 10px rgba(230,185,82,0.2); transform: scale(1); } }
+        
         #modal-wifi { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.95); z-index: 3000; align-items: center; justify-content: center; backdrop-filter: blur(8px); }
         #gps-error { display: none; position: fixed; inset: 0; background: #000; z-index: 10000; color: white; text-align: center; padding: 40px; flex-direction: column; align-items: center; justify-content: center; }
     </style>
@@ -74,7 +76,8 @@
             <button onclick="confirmarEnvio('Garçom')" class="btn-invisivel"></button>
             <button onclick="confirmarEnvio('Conta')" class="btn-invisivel"></button>
             <button onclick="abrirWifi()" class="btn-invisivel"></button>
-            <button onclick="window.open('https://linktr.ee', '_blank')" class="btn-invisivel"></button>
+            <!-- LINK DIRETO CORRIGIDO -->
+            <button onclick="window.location.assign('https://linktr.ee')" class="btn-invisivel"></button>
         </div>
     </div>
 
