@@ -76,7 +76,9 @@
             <button onclick="confirmarEnvio('Garçom')" class="btn-acao"></button>
             <button onclick="confirmarEnvio('Conta')" class="btn-acao"></button>
             <button onclick="abrirWifi()" class="btn-acao"></button>
-            <a href="https://linktr.ee" target="_blank" rel="noopener noreferrer" class="btn-acao"></a>
+            
+            <!-- LINK DO CARDÁPIO CONFIGURADO CORRETAMENTE -->
+            <a href="https://linktr.ee/Fatiasnatal" target="_blank" rel="noopener noreferrer" class="btn-acao"></a>
         </div>
     </div>
 
@@ -140,7 +142,6 @@
             if(confirm(`Confirmar chamado de ${acao}?`)) {
                 tipoPedidoAtual = acao;
 
-                // LIMPA QUALQUER ESTADO ANTERIOR PARA O NOVO CHAMADO APARECER
                 if (monitoramentoStatus) clearInterval(monitoramentoStatus);
                 const notif = document.getElementById('notificacao-atendimento');
                 const texto = document.getElementById('texto-feedback');
