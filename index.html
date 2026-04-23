@@ -7,62 +7,17 @@
     <title>Fatia's Control - Natal</title>
     <style>
         @import url('https://googleapis.com');
-
-        body, html { 
-            margin: 0; padding: 0; width: 100%; height: 100%; 
-            overflow: hidden; background-color: #000; 
-            display: flex; justify-content: center; align-items: center;
-            font-family: 'Montserrat', sans-serif;
-        }
-        
-        .painel-container {
-            background-image: url('/fundo.jpg'); 
-            background-size: contain; background-repeat: no-repeat;
-            background-position: center; width: 100vw; height: 100vh;
-            position: relative;
-        }
-
-        .etiqueta-mesa {
-            position: absolute; top: 36%; left: 14%; padding: 5px 15px;
-            border: 2px solid #E6B952; border-radius: 10px; color: #E6B952;
-            font-weight: 900; font-size: 14px; text-transform: uppercase;
-            background: rgba(0,0,0,0.3); z-index: 15;
-        }
-
-        .grade-toque {
-            position: absolute; top: 45%; left: 14%; right: 14%; bottom: 15%;
-            display: grid; grid-template-columns: 1fr 1fr; grid-template-rows: 1fr 1fr;
-            gap: 15px; z-index: 10;
-        }
-
+        body, html { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; background-color: #000; display: flex; justify-content: center; align-items: center; font-family: 'Montserrat', sans-serif; }
+        .painel-container { background-image: url('/fundo.jpg'); background-size: contain; background-repeat: no-repeat; background-position: center; width: 100vw; height: 100vh; position: relative; }
+        .etiqueta-mesa { position: absolute; top: 36%; left: 14%; padding: 5px 15px; border: 2px solid #E6B952; border-radius: 10px; color: #E6B952; font-weight: 900; font-size: 14px; text-transform: uppercase; background: rgba(0,0,0,0.3); z-index: 15; }
+        .grade-toque { position: absolute; top: 45%; left: 14%; right: 14%; bottom: 15%; display: grid; grid-template-columns: 1fr 1fr; grid-template-rows: 1fr 1fr; gap: 15px; z-index: 10; }
         .btn-invisivel { background: transparent; border: none; outline: none; cursor: pointer; }
-
-        #notificacao-atendimento {
-            display: none; position: fixed; top: 20px; left: 50%; transform: translateX(-50%);
-            background: #1e40af; color: white; padding: 15px 30px; border-radius: 50px;
-            font-weight: bold; box-shadow: 0 10px 20px rgba(0,0,0,0.5); z-index: 2000;
-            border: 2px solid #3b82f6; text-align: center; width: 85%;
-            animation: slideIn 0.4s ease-out;
-        }
+        #notificacao-atendimento { display: none; position: fixed; top: 20px; left: 50%; transform: translateX(-50%); background: #1e40af; color: white; padding: 15px 30px; border-radius: 50px; font-weight: bold; box-shadow: 0 10px 20px rgba(0,0,0,0.5); z-index: 2000; border: 2px solid #3b82f6; text-align: center; width: 85%; animation: slideIn 0.4s ease-out; }
         @keyframes slideIn { from { top: -100px; opacity: 0; } to { top: 20px; opacity: 1; } }
-
-        #overlay-inicio { 
-            position: fixed; inset: 0; background: rgba(0,0,0,0.9); z-index: 9999; 
-            display: flex; flex-direction: column; align-items: center; justify-content: center;
-            backdrop-filter: blur(10px);
-        }
-        .container-iniciar {
-            text-align: center; padding: 40px; border: 1px solid rgba(230, 185, 82, 0.3);
-            border-radius: 40px; background: rgba(255, 255, 255, 0.03);
-        }
+        #overlay-inicio { position: fixed; inset: 0; background: rgba(0,0,0,0.9); z-index: 9999; display: flex; flex-direction: column; align-items: center; justify-content: center; backdrop-filter: blur(10px); }
+        .container-iniciar { text-align: center; padding: 40px; border: 1px solid rgba(230, 185, 82, 0.3); border-radius: 40px; background: rgba(255, 255, 255, 0.03); }
         .btn-iniciar-text { color: #E6B952; font-weight: 900; font-size: 28px; text-transform: uppercase; letter-spacing: 4px; animation: pulse-gold 2s infinite; }
-        
-        @keyframes pulse-gold {
-            0% { text-shadow: 0 0 10px rgba(230,185,82,0.2); transform: scale(1); }
-            50% { text-shadow: 0 0 25px rgba(230,185,82,0.7); transform: scale(1.05); }
-            100% { text-shadow: 0 0 10px rgba(230,185,82,0.2); transform: scale(1); }
-        }
-
+        @keyframes pulse-gold { 0% { text-shadow: 0 0 10px rgba(230,185,82,0.2); transform: scale(1); } 50% { text-shadow: 0 0 25px rgba(230,185,82,0.7); transform: scale(1.05); } 100% { text-shadow: 0 0 10px rgba(230,185,82,0.2); transform: scale(1); } }
         #modal-wifi { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.95); z-index: 1000; align-items: center; justify-content: center; backdrop-filter: blur(8px); }
         #gps-error { display: none; position: fixed; inset: 0; background: #000; z-index: 10000; color: white; text-align: center; padding: 40px; flex-direction: column; align-items: center; justify-content: center; }
     </style>
@@ -71,7 +26,7 @@
 
     <div id="gps-error">
         <h2 class="text-red-500 font-bold text-2xl mb-4 uppercase">Acesso Bloqueado</h2>
-        <p id="gps-msg" class="opacity-70">Para sua segurança e uso do sistema, você deve estar fisicamente na Fatia's Natal e permitir o acesso à localização.</p>
+        <p id="gps-msg" class="opacity-70">Para sua segurança, você deve estar na Fatia's Natal.</p>
         <button onclick="window.location.reload()" class="mt-8 bg-[#E6B952] text-black px-8 py-3 rounded-full font-bold">TENTAR NOVAMENTE</button>
     </div>
 
@@ -81,21 +36,21 @@
         <div class="container-iniciar">
             <div class="btn-iniciar-text">INICIAR AGORA</div>
             <div class="mt-4 text-[#E6B952] font-bold text-sm">MESA <span id="label-mesa-inicio">--</span></div>
-            <p class="mt-6 text-white/30 text-[9px] uppercase tracking-widest">Acesso restrito à loja (Raio 50m)</p>
+            <p class="mt-6 text-white/30 text-[9px] uppercase tracking-widest">Acesso restrito à loja</p>
         </div>
     </div>
 
     <div class="painel-container">
         <div class="etiqueta-mesa">MESA <span id="num-mesa-painel">--</span></div>
         <div class="grade-toque">
-            <button onclick="confirmarEnvio('Garçom')" class="btn-invisivel"></button>
-            <button onclick="confirmarEnvio('Conta')" class="btn-invisivel"></button>
-            <button onclick="abrirWifi()" class="btn-invisivel"></button>
-            <button onclick="confirmarEnvio('Cardápio')" class="btn-invisivel"></button>
+            <button onclick="confirmarEnvio('Garçom')" class="btn-invisivel" title="Chamar Garçom"></button>
+            <button onclick="confirmarEnvio('Conta')" class="btn-invisivel" title="Pedir Conta"></button>
+            <button onclick="abrirWifi()" class="btn-invisivel" title="Wi-Fi"></button>
+            <button onclick="window.open('https://google.com', '_blank')" class="btn-invisivel" title="Ver Cardápio"></button>
         </div>
     </div>
 
-    <div id="modal-wifi" class="hidden">
+    <div id="modal-wifi">
          <div class="bg-[#111] border-2 border-[#E6B952] p-10 rounded-[30px] text-center text-white w-[85%]">
             <h2 class="text-[#E6B952] font-bold mb-4 uppercase">Wi-Fi</h2>
             <p class="text-xs opacity-50 mb-1">REDE: fatias cliente</p>
@@ -105,50 +60,55 @@
     </div>
 
     <script>
-        // --- CONFIGURAÇÃO GEOGRÁFICA ATUALIZADA ---
-        const RESTAURANTE_LAT = -5.87639; 
-        const RESTAURANTE_LON = -35.18111; 
-        const DISTANCIA_MAXIMA = 0.05; // 50 METROS
+        // CONFIGURAÇÕES DE LOCALIZAÇÃO (PONTOS ACEITOS)
+        const LOCAIS_PERMITIDOS = [
+            { lat: -5.87639, lon: -35.18111 }, // Local 1 (Ponta Negra)
+            { lat: -5.87188, lon: -35.18160 }  // Local 2 (Candelária/Integração)
+        ];
+        const DISTANCIA_MAXIMA = 0.06; // 60 metros de tolerância
 
         const pathParts = window.location.pathname.split('/');
         const mesa = pathParts[pathParts.length - 1] || "01";
         document.getElementById('label-mesa-inicio').innerText = mesa;
         document.getElementById('num-mesa-painel').innerText = mesa;
 
-        const somAlerta = new Audio('/suave.mp3');
-        
+        const somFeedback = new Audio('/suave.mp3');
+        let monitoramentoStatus = null;
+
         function calcularDistancia(lat1, lon1, lat2, lon2) {
             const R = 6371; 
             const dLat = (lat2 - lat1) * Math.PI / 180;
             const dLon = (lon2 - lon1) * Math.PI / 180;
             const a = Math.sin(dLat/2) * Math.sin(dLat/2) + Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * Math.sin(dLon/2) * Math.sin(dLon/2);
-            const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
-            return R * c;
+            return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
         }
 
         function solicitarPermissao() {
             if ("geolocation" in navigator) {
-                navigator.geolocation.getCurrentPosition(
-                    (position) => {
-                        const dist = calcularDistancia(position.coords.latitude, position.coords.longitude, RESTAURANTE_LAT, RESTAURANTE_LON);
-                        if (dist <= DISTANCIA_MAXIMA) { 
-                            iniciarSistema(); 
-                        } else { 
-                            document.getElementById('gps-msg').innerText = "Acesso negado. Você está a " + (dist * 1000).toFixed(0) + " metros da Fatia's Natal."; 
-                            document.getElementById('gps-error').style.display = 'flex'; 
-                        }
-                    },
-                    () => { 
-                        document.getElementById('gps-msg').innerText = "Localização necessária. Ative o GPS e permita o acesso para pedir na sua mesa."; 
+                navigator.geolocation.getCurrentPosition((pos) => {
+                    const lat = pos.coords.latitude;
+                    const lon = pos.coords.longitude;
+                    
+                    // Verifica se está perto de QUALQUER um dos locais permitidos
+                    const estaPerto = LOCAIS_PERMITIDOS.some(local => 
+                        calcularDistancia(lat, lon, local.lat, local.lon) <= DISTANCIA_MAXIMA
+                    );
+
+                    if (estaPerto) { 
+                        iniciarSistema(); 
+                    } else { 
+                        document.getElementById('gps-msg').innerText = "Você não parece estar em uma unidade Fatia's Natal."; 
                         document.getElementById('gps-error').style.display = 'flex'; 
-                    },
-                    { enableHighAccuracy: true }
-                );
+                    }
+                }, () => { 
+                    document.getElementById('gps-msg').innerText = "Ative o GPS para continuar."; 
+                    document.getElementById('gps-error').style.display = 'flex'; 
+                }, { enableHighAccuracy: true });
             }
         }
 
         function iniciarSistema() {
-            somAlerta.play().then(() => { somAlerta.pause(); somAlerta.currentTime = 0; }).catch(() => {});
+            somFeedback.play().then(() => { somFeedback.pause(); somFeedback.currentTime = 0; }).catch(() => {});
             document.getElementById('overlay-inicio').style.display = 'none';
         }
 
@@ -159,24 +119,31 @@
                     headers: {'Content-Type': 'application/json'}, 
                     body: JSON.stringify({ mesa: mesa, acao: acao }) 
                 }).then(() => {
-                    exibirNotificacao();
+                    document.getElementById('texto-feedback').innerText = "⏳ ENVIADO! AGUARDANDO GARÇOM...";
+                    document.getElementById('notificacao-atendimento').style.display = 'block';
+                    document.getElementById('notificacao-atendimento').style.backgroundColor = "#1e40af";
+                    iniciarVigilancia();
                 });
             }
         }
 
-        function abrirWifi() { 
-            document.getElementById('modal-wifi').style.display = 'flex'; 
+        function iniciarVigilancia() {
+            if (monitoramentoStatus) clearInterval(monitoramentoStatus);
+            monitoramentoStatus = setInterval(() => {
+                fetch(`/status-atendimento/${mesa}`).then(res => res.json()).then(data => {
+                    if (data.atendido) {
+                        somFeedback.play().catch(() => {});
+                        document.getElementById('texto-feedback').innerText = "✅ O GARÇOM ESTÁ A CAMINHO!";
+                        document.getElementById('notificacao-atendimento').style.backgroundColor = "#059669";
+                        clearInterval(monitoramentoStatus);
+                        setTimeout(() => { document.getElementById('notificacao-atendimento').style.display = 'none'; }, 6000);
+                    }
+                });
+            }, 2500);
         }
 
-        function fecharWifi() { 
-            document.getElementById('modal-wifi').style.display = 'none'; 
-        }
-
-        function exibirNotificacao() {
-            const notif = document.getElementById('notificacao-atendimento');
-            notif.style.display = 'block';
-            setTimeout(() => { notif.style.display = 'none'; }, 5000);
-        }
+        function abrirWifi() { document.getElementById('modal-wifi').style.display = 'flex'; }
+        function fecharWifi() { document.getElementById('modal-wifi').style.display = 'none'; }
     </script>
 </body>
 </html>
