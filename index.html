@@ -26,7 +26,7 @@
 
     <div id="gps-error">
         <h2 class="text-red-500 font-bold text-2xl mb-4 uppercase">Acesso Bloqueado</h2>
-        <p id="gps-msg" class="opacity-70">Para sua segurança, você deve estar na Fatia's Natal.</p>
+        <p id="gps-msg" class="opacity-70">Para sua segurança, você deve estar na Fatia's Natal e permitir a localização.</p>
         <button onclick="window.location.reload()" class="mt-8 bg-[#E6B952] text-black px-8 py-3 rounded-full font-bold">TENTAR NOVAMENTE</button>
     </div>
 
@@ -43,10 +43,10 @@
     <div class="painel-container">
         <div class="etiqueta-mesa">MESA <span id="num-mesa-painel">--</span></div>
         <div class="grade-toque">
-            <button onclick="confirmarEnvio('Garçom')" class="btn-invisivel" title="Chamar Garçom"></button>
-            <button onclick="confirmarEnvio('Conta')" class="btn-invisivel" title="Pedir Conta"></button>
-            <button onclick="abrirWifi()" class="btn-invisivel" title="Wi-Fi"></button>
-            <button onclick="window.open('https://google.com', '_blank')" class="btn-invisivel" title="Ver Cardápio"></button>
+            <button onclick="confirmarEnvio('Garçom')" class="btn-invisivel"></button>
+            <button onclick="confirmarEnvio('Conta')" class="btn-invisivel"></button>
+            <button onclick="abrirWifi()" class="btn-invisivel"></button>
+            <button onclick="window.open('https://google.com', '_blank')" class="btn-invisivel"></button>
         </div>
     </div>
 
@@ -60,12 +60,12 @@
     </div>
 
     <script>
-        // CONFIGURAÇÕES DE LOCALIZAÇÃO (PONTOS ACEITOS)
+        // CONFIGURAÇÕES DE LOCALIZAÇÃO ATUALIZADAS
         const LOCAIS_PERMITIDOS = [
-            { lat: -5.87639, lon: -35.18111 }, // Local 1 (Ponta Negra)
-            { lat: -5.87188, lon: -35.18160 }  // Local 2 (Candelária/Integração)
+            { lat: -5.890425, lon: -35.169790 }, // Local Atual Informado
+            { lat: -5.87639, lon: -35.18111 }    // Local Secundário
         ];
-        const DISTANCIA_MAXIMA = 0.06; // 60 metros de tolerância
+        const DISTANCIA_MAXIMA = 0.08; // Raio de 80 metros
 
         const pathParts = window.location.pathname.split('/');
         const mesa = pathParts[pathParts.length - 1] || "01";
@@ -89,7 +89,6 @@
                     const lat = pos.coords.latitude;
                     const lon = pos.coords.longitude;
                     
-                    // Verifica se está perto de QUALQUER um dos locais permitidos
                     const estaPerto = LOCAIS_PERMITIDOS.some(local => 
                         calcularDistancia(lat, lon, local.lat, local.lon) <= DISTANCIA_MAXIMA
                     );
@@ -97,11 +96,11 @@
                     if (estaPerto) { 
                         iniciarSistema(); 
                     } else { 
-                        document.getElementById('gps-msg').innerText = "Você não parece estar em uma unidade Fatia's Natal."; 
+                        document.getElementById('gps-msg').innerText = "Acesso negado. Você está fora do raio da unidade."; 
                         document.getElementById('gps-error').style.display = 'flex'; 
                     }
                 }, () => { 
-                    document.getElementById('gps-msg').innerText = "Ative o GPS para continuar."; 
+                    document.getElementById('gps-msg').innerText = "Ative o GPS e permita o acesso para continuar."; 
                     document.getElementById('gps-error').style.display = 'flex'; 
                 }, { enableHighAccuracy: true });
             }
