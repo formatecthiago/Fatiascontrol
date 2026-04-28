@@ -34,7 +34,7 @@
             atualizar();
         }
         function minimizar() { if (document.exitFullscreen) document.exitFullscreen().catch(() => {}); document.getElementById('setup-overlay').style.display = 'flex'; }
-        function sair() { if(confirm("Encerrar Jesus?")) window.location.href = "about:blank"; }
+        function sair() { if(confirm("Encerrar painel?")) window.location.href = "about:blank"; }
         function atualizar() {
             fetch('/obter-estado-geral').then(res => res.json()).then(mesas => {
                 const grid = document.getElementById('grid'); grid.innerHTML = '';
