@@ -7,79 +7,41 @@
     <title>Fatia's Control - Jesus</title>
     <style>
         @import url('https://googleapis.com');
-        
-        body, html { 
-            margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; 
-            background-color: #000; display: flex; justify-content: center; align-items: center; 
-            font-family: 'Montserrat', sans-serif;
-            /* TOQUE FIRME: Remove atrasos e sombras de seleção */
-            touch-action: manipulation;
-            -webkit-tap-highlight-color: transparent;
-            user-select: none;
-        }
-
+        body, html { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; background-color: #000; display: flex; justify-content: center; align-items: center; font-family: 'Montserrat', sans-serif; touch-action: manipulation; -webkit-tap-highlight-color: transparent; user-select: none; }
         .painel-container { background-image: url('/fundo.jpg'); background-size: contain; background-repeat: no-repeat; background-position: center; width: 100vw; height: 100vh; position: relative; }
-        
         .etiqueta-mesa { position: absolute; top: 36%; left: 14%; padding: 5px 15px; border: 2px solid #E6B952; border-radius: 10px; color: #E6B952; font-weight: 900; font-size: 14px; text-transform: uppercase; background: rgba(0,0,0,0.3); z-index: 15; }
-        
-        /* ÁREA DOS 4 BOTÕES PRINCIPAIS */
         .grade-toque { position: absolute; top: 40%; bottom: 24%; left: 12%; right: 12%; display: grid; grid-template-columns: 1fr 1fr; grid-template-rows: 1fr 1fr; gap: 20px; z-index: 10; }
         
-        /* ÁREA DO RODAPÉ (SAIR E MINIMIZAR MAPEADOS DO PRINT) */
-        .grade-rodape { 
-            position: absolute; bottom: 4%; left: 15%; right: 15%; height: 8%; 
-            display: grid; grid-template-columns: 1fr 1fr; gap: 60px; z-index: 10; 
-        }
-
+        /* RODAPÉ AJUSTADO 1.5CM PARA CIMA */
+        .grade-rodape { position: absolute; bottom: 12%; left: 15%; right: 15%; height: 8%; display: grid; grid-template-columns: 1fr 1fr; gap: 60px; z-index: 10; }
+        
         .btn-acao { background: transparent; border: none; outline: none; cursor: pointer; display: block; width: 100%; height: 100%; -webkit-tap-highlight-color: transparent; }
-
         #notificacao-atendimento { display: none; position: fixed; top: 20px; left: 50%; transform: translateX(-50%); background: #1e40af; color: white; padding: 15px 30px; border-radius: 50px; font-weight: bold; box-shadow: 0 10px 20px rgba(0,0,0,0.5); z-index: 5000; border: 2px solid #3b82f6; text-align: center; width: 85%; animation: slideIn 0.4s ease-out; }
         @keyframes slideIn { from { top: -100px; opacity: 0; } to { top: 20px; opacity: 1; } }
-        
         #modal-wifi { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.85); z-index: 9999; align-items: center; justify-content: center; backdrop-filter: blur(10px); }
         .balao-wifi { background: #111; border: 2px solid #E6B952; padding: 40px 20px; border-radius: 30px; text-align: center; color: white; width: 80%; }
-
         #overlay-inicio { position: fixed; inset: 0; background: rgba(0,0,0,0.9); z-index: 8000; display: flex; flex-direction: column; align-items: center; justify-content: center; backdrop-filter: blur(10px); cursor: pointer; }
         .btn-iniciar-text { color: #E6B952; font-weight: 900; font-size: 28px; text-transform: uppercase; letter-spacing: 4px; animation: pulse-gold 2s infinite; }
-        #gps-error { display: none; position: fixed; inset: 0; background: #000; z-index: 10000; color: white; text-align: center; padding: 40px; flex-direction: column; align-items: center; justify-content: center; }
+        @keyframes pulse-gold { 0% { text-shadow: 0 0 10px rgba(230,185,82,0.2); transform: scale(1); } 50% { text-shadow: 0 0 25px rgba(230,185,82,0.7); transform: scale(1.05); } 100% { text-shadow: 0 0 10px rgba(230,185,82,0.2); transform: scale(1); } }
     </style>
 </head>
 <body>
-    <div id="gps-error">
-        <h2 class="text-red-500 font-bold text-2xl mb-4">Acesso Bloqueado</h2>
-        <p>Você deve estar na Fatia's Natal para acessar o menu.</p>
-        <button onclick="window.location.reload()" class="mt-8 bg-[#E6B952] text-black px-8 py-3 rounded-full font-bold">TENTAR NOVAMENTE</button>
-    </div>
-
     <div id="notificacao-atendimento"><span id="texto-feedback">--</span></div>
-
-    <div id="overlay-inicio" onclick="solicitarPermissao()">
-        <div class="text-center">
-            <div class="btn-iniciar-text">INICIAR AGORA</div>
-            <div class="mt-4 text-[#E6B952] font-bold">MESA <span id="label-mesa-inicio">--</span></div>
-        </div>
-    </div>
-
+    <div id="overlay-inicio" onclick="solicitarPermissao()"><div class="text-center"><div class="btn-iniciar-text">INICIAR AGORA</div><div class="mt-4 text-[#E6B952] font-bold">MESA <span id="label-mesa-inicio">--</span></div></div></div>
     <div class="painel-container">
         <div class="etiqueta-mesa">MESA <span id="num-mesa-painel">--</span></div>
-        
-        <!-- BOTÕES PRINCIPAIS -->
         <div class="grade-toque">
             <button onclick="confirmarEnvio('Garçom')" class="btn-acao"></button>
             <button onclick="confirmarEnvio('Conta')" class="btn-acao"></button>
             <button onclick="abrirWifi()" class="btn-acao"></button>
             <a href="https://linktr.ee" target="_blank" rel="noopener noreferrer" class="btn-acao"></a>
         </div>
-
-        <!-- BOTÕES DE RODAPÉ (SAIR E MINIMIZAR) -->
         <div class="grade-rodape">
-            <button onclick="sairSistema()" class="btn-acao"></button>
-            <button onclick="minimizarSistema()" class="btn-acao"></button>
+            <button onclick="sairSistema()" class="btn-acao" title="Sair"></button>
+            <button onclick="minimizarSistema()" class="btn-acao" title="Minimizar"></button>
         </div>
     </div>
-
     <div id="modal-wifi"><div class="balao-wifi"><h2 class="text-[#E6B952] font-bold mb-4 uppercase">Wi-Fi Clientes</h2><p class="text-xs">Rede: fatias cliente</p><h1 class="text-3xl font-black text-[#E6B952] mb-8">fatias2025</h1><button onclick="fecharWifi()" class="bg-white/10 text-white px-10 py-3 rounded-full text-xs font-bold uppercase border border-white/20">Fechar</button></div></div>
-
     <script>
         const LOCAIS_PERMITIDOS = [{ lat: -5.890425, lon: -35.169790 }, { lat: -5.87639, lon: -35.18111 }];
         const DISTANCIA_MAXIMA = 0.08;
@@ -87,50 +49,21 @@
         const mesa = pathParts[pathParts.length - 1] || "01";
         document.getElementById('label-mesa-inicio').innerText = mesa;
         document.getElementById('num-mesa-painel').innerText = mesa;
-
         const somFeedback = new Audio('/suave.mp3');
         let monitoramentoStatus = null, tipoPedidoAtual = "";
-
-        function calcularDistancia(lat1, lon1, lat2, lon2) {
-            const R = 6371; 
-            const dLat = (lat2 - lat1) * Math.PI / 180, dLon = (lon2 - lon1) * Math.PI / 180;
-            const a = Math.sin(dLat/2) * Math.sin(dLat/2) + Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * Math.sin(dLon/2) * Math.sin(dLon/2);
-            return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
-        }
-
-        function solicitarPermissao() {
-            navigator.geolocation.getCurrentPosition((pos) => {
-                const estaPerto = LOCAIS_PERMITIDOS.some(l => calcularDistancia(pos.coords.latitude, pos.coords.longitude, l.lat, l.lon) <= DISTANCIA_MAXIMA);
-                if (estaPerto) { iniciarSistema(); } else { document.getElementById('gps-error').style.display = 'flex'; }
-            }, () => { document.getElementById('gps-error').style.display = 'flex'; }, { enableHighAccuracy: true });
-        }
-
-        function iniciarSistema() { 
-            somFeedback.play().then(() => { somFeedback.pause(); somFeedback.currentTime = 0; }).catch(() => {}); 
-            document.getElementById('overlay-inicio').style.display = 'none'; 
-        }
-
-        function minimizarSistema() {
-            document.getElementById('overlay-inicio').style.display = 'flex';
-        }
-
-        function sairSistema() {
-            if(confirm("Deseja encerrar o atendimento?")) {
-                window.location.href = "https://google.com";
-            }
-        }
-
+        function solicitarPermissao() { iniciarSistema(); }
+        function iniciarSistema() { somFeedback.play().then(() => { somFeedback.pause(); somFeedback.currentTime = 0; }).catch(() => {}); document.getElementById('overlay-inicio').style.display = 'none'; }
+        function minimizarSistema() { document.getElementById('overlay-inicio').style.display = 'flex'; }
+        function sairSistema() { if(confirm("Deseja encerrar o atendimento?")) window.location.href = "https://google.com"; }
         function confirmarEnvio(acao) {
             if(confirm(`Confirmar chamado de ${acao}?`)) {
                 tipoPedidoAtual = acao;
-                if (monitoramentoStatus) clearInterval(monitoramentoStatus);
                 const notif = document.getElementById('notificacao-atendimento');
                 notif.style.display = 'none';
                 setTimeout(() => { document.getElementById('texto-feedback').innerText = "⏳ ENVIADO! AGUARDANDO..."; notif.style.backgroundColor = "#1e40af"; notif.style.display = 'block'; }, 50);
                 fetch('/enviar-chamado', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ mesa, acao }) }).then(() => iniciarVigilancia());
             }
         }
-
         function iniciarVigilancia() {
             monitoramentoStatus = setInterval(() => {
                 fetch(`/status-atendimento/${mesa}`).then(res => res.json()).then(data => {
