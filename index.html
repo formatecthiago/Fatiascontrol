@@ -11,10 +11,7 @@
         .painel-container { background-image: url('/fundo.jpg'); background-size: contain; background-repeat: no-repeat; background-position: center; width: 100vw; height: 100vh; position: relative; }
         .etiqueta-mesa { position: absolute; top: 36%; left: 14%; padding: 5px 15px; border: 2px solid #E6B952; border-radius: 10px; color: #E6B952; font-weight: 900; font-size: 14px; text-transform: uppercase; background: rgba(0,0,0,0.3); z-index: 15; }
         .grade-toque { position: absolute; top: 40%; bottom: 24%; left: 12%; right: 12%; display: grid; grid-template-columns: 1fr 1fr; grid-template-rows: 1fr 1fr; gap: 20px; z-index: 10; }
-        
-        /* RODAPÉ AJUSTADO 1.5CM PARA CIMA */
         .grade-rodape { position: absolute; bottom: 12%; left: 15%; right: 15%; height: 8%; display: grid; grid-template-columns: 1fr 1fr; gap: 60px; z-index: 10; }
-        
         .btn-acao { background: transparent; border: none; outline: none; cursor: pointer; display: block; width: 100%; height: 100%; -webkit-tap-highlight-color: transparent; }
         #notificacao-atendimento { display: none; position: fixed; top: 20px; left: 50%; transform: translateX(-50%); background: #1e40af; color: white; padding: 15px 30px; border-radius: 50px; font-weight: bold; box-shadow: 0 10px 20px rgba(0,0,0,0.5); z-index: 5000; border: 2px solid #3b82f6; text-align: center; width: 85%; animation: slideIn 0.4s ease-out; }
         @keyframes slideIn { from { top: -100px; opacity: 0; } to { top: 20px; opacity: 1; } }
@@ -34,11 +31,11 @@
             <button onclick="confirmarEnvio('Garçom')" class="btn-acao"></button>
             <button onclick="confirmarEnvio('Conta')" class="btn-acao"></button>
             <button onclick="abrirWifi()" class="btn-acao"></button>
-            <a href="https://linktr.ee" target="_blank" rel="noopener noreferrer" class="btn-acao"></a>
+            <a href="https://linktr.ee/Fatiasnatal" target="_blank" rel="noopener noreferrer" class="btn-acao"></a>
         </div>
         <div class="grade-rodape">
-            <button onclick="sairSistema()" class="btn-acao" title="Sair"></button>
-            <button onclick="minimizarSistema()" class="btn-acao" title="Minimizar"></button>
+            <button onclick="sairSistema()" class="btn-acao"></button>
+            <button onclick="minimizarSistema()" class="btn-acao"></button>
         </div>
     </div>
     <div id="modal-wifi"><div class="balao-wifi"><h2 class="text-[#E6B952] font-bold mb-4 uppercase">Wi-Fi Clientes</h2><p class="text-xs">Rede: fatias cliente</p><h1 class="text-3xl font-black text-[#E6B952] mb-8">fatias2025</h1><button onclick="fecharWifi()" class="bg-white/10 text-white px-10 py-3 rounded-full text-xs font-bold uppercase border border-white/20">Fechar</button></div></div>
@@ -58,9 +55,10 @@
         function confirmarEnvio(acao) {
             if(confirm(`Confirmar chamado de ${acao}?`)) {
                 tipoPedidoAtual = acao;
+                if (monitoramentoStatus) clearInterval(monitoramentoStatus);
                 const notif = document.getElementById('notificacao-atendimento');
                 notif.style.display = 'none';
-                setTimeout(() => { document.getElementById('texto-feedback').innerText = "⏳ ENVIADO! AGUARDANDO..."; notif.style.backgroundColor = "#1e40af"; notif.style.display = 'block'; }, 50);
+                setTimeout(() => { document.getElementById('texto-feedback').innerText = "⏳ ENVIADO!"; notif.style.display = 'block'; }, 50);
                 fetch('/enviar-chamado', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ mesa, acao }) }).then(() => iniciarVigilancia());
             }
         }
