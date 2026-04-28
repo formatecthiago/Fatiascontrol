@@ -51,4 +51,4 @@ app.get('/status-atendimento/:mesa', (req, res) => {
 });
 
 app.get('/', (req, res) => res.sendFile(path.join(__dirname, 'index.html')));
-app.listen(PORT, () => console.log(`Servidor rodando`));
+app.listen(PORT, () => console.log(`Servidor Jesus rodando na porta ${PORT}`));
