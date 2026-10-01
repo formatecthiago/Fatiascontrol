@@ -3,12 +3,16 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <script src="https://tailwindcss.com"></script>
+    <!-- CDN correto de produção do Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Fonte Montserrat importada corretamente do Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700;900&display=swap" rel="stylesheet">
     <title>Fatia's Control - Jesus</title>
     <style>
-        @import url('https://googleapis.com');
         body, html { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; background-color: #000; display: flex; justify-content: center; align-items: center; font-family: 'Montserrat', sans-serif; touch-action: manipulation; -webkit-tap-highlight-color: transparent; user-select: none; }
-        .painel-container { background-image: url('/fundo.jpg'); background-size: contain; background-repeat: no-repeat; background-position: center; width: 100vw; height: 100vh; position: relative; }
+        .painel-container { background-image: url('fundo.jpg'); background-size: contain; background-repeat: no-repeat; background-position: center; width: 100vw; height: 100vh; position: relative; }
         .etiqueta-mesa { position: absolute; top: 36%; left: 14%; padding: 5px 15px; border: 2px solid #E6B952; border-radius: 10px; color: #E6B952; font-weight: 900; font-size: 14px; text-transform: uppercase; background: rgba(0,0,0,0.3); z-index: 15; }
         .grade-toque { position: absolute; top: 40%; bottom: 24%; left: 12%; right: 12%; display: grid; grid-template-columns: 1fr 1fr; grid-template-rows: 1fr 1fr; gap: 20px; z-index: 10; }
         .grade-rodape { position: absolute; bottom: 12%; left: 15%; right: 15%; height: 8%; display: grid; grid-template-columns: 1fr 1fr; gap: 60px; z-index: 10; }
@@ -40,18 +44,28 @@
     </div>
     <div id="modal-wifi"><div class="balao-wifi"><h2 class="text-[#E6B952] font-bold mb-4 uppercase">Wi-Fi Clientes</h2><p class="text-xs">Rede: fatias cliente</p><h1 class="text-3xl font-black text-[#E6B952] mb-8">fatias2025</h1><button onclick="fecharWifi()" class="bg-white/10 text-white px-10 py-3 rounded-full text-xs font-bold uppercase border border-white/20">Fechar</button></div></div>
     <script>
+        // Define automaticamente o servidor de acordo com a origem do acesso
+        const API_URL = window.location.origin;
+
         const LOCAIS_PERMITIDOS = [{ lat: -5.890425, lon: -35.169790 }, { lat: -5.87639, lon: -35.18111 }];
         const DISTANCIA_MAXIMA = 0.08;
+        
+        // Pega o número da mesa via parâmetros da URL (?mesa=01) ou mantém o último segmento do caminho (/mesa/01)
+        const urlParams = new URLSearchParams(window.location.search);
         const pathParts = window.location.pathname.split('/');
-        const mesa = pathParts[pathParts.length - 1] || "01";
+        const mesa = urlParams.get('mesa') || pathParts[pathParts.length - 1] || "01";
+
         document.getElementById('label-mesa-inicio').innerText = mesa;
         document.getElementById('num-mesa-painel').innerText = mesa;
-        const somFeedback = new Audio('/suave.mp3');
+        
+        const somFeedback = new Audio('suave.mp3');
         let monitoramentoStatus = null, tipoPedidoAtual = "";
+
         function solicitarPermissao() { iniciarSistema(); }
         function iniciarSistema() { somFeedback.play().then(() => { somFeedback.pause(); somFeedback.currentTime = 0; }).catch(() => {}); document.getElementById('overlay-inicio').style.display = 'none'; }
         function minimizarSistema() { document.getElementById('overlay-inicio').style.display = 'flex'; }
         function sairSistema() { if(confirm("Deseja encerrar o atendimento?")) window.location.href = "https://google.com"; }
+        
         function confirmarEnvio(acao) {
             if(confirm(`Confirmar chamado de ${acao}?`)) {
                 tipoPedidoAtual = acao;
@@ -59,12 +73,20 @@
                 const notif = document.getElementById('notificacao-atendimento');
                 notif.style.display = 'none';
                 setTimeout(() => { document.getElementById('texto-feedback').innerText = "⏳ ENVIADO!"; notif.style.display = 'block'; }, 50);
-                fetch('/enviar-chamado', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ mesa, acao }) }).then(() => iniciarVigilancia());
+                
+                fetch(`${API_URL}/enviar-chamado`, { 
+                    method: 'POST', 
+                    headers: {'Content-Type': 'application/json'}, 
+                    body: JSON.stringify({ mesa, acao }) 
+                }).then(() => iniciarVigilancia());
             }
         }
+
         function iniciarVigilancia() {
             monitoramentoStatus = setInterval(() => {
-                fetch(`/status-atendimento/${mesa}`).then(res => res.json()).then(data => {
+                fetch(`${API_URL}/status-atendimento/${mesa}`)
+                .then(res => res.json())
+                .then(data => {
                     if (data.atendido) {
                         somFeedback.play().catch(() => {});
                         const msg = (tipoPedidoAtual === "Garçom") ? "✅ O GARÇOM ESTÁ A CAMINHO!" : "✅ A CONTA ESTÁ VINDO!";
@@ -76,6 +98,7 @@
                 });
             }, 2500);
         }
+
         function abrirWifi() { document.getElementById('modal-wifi').style.display = 'flex'; }
         function fecharWifi() { document.getElementById('modal-wifi').style.display = 'none'; }
     </script>
