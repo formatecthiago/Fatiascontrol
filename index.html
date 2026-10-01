@@ -3,9 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <!-- CDN correto do Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Fonte Montserrat importada corretamente -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700;900&display=swap" rel="stylesheet">
@@ -44,13 +42,8 @@
     </div>
     <div id="modal-wifi"><div class="balao-wifi"><h2 class="text-[#E6B952] font-bold mb-4 uppercase">Wi-Fi Clientes</h2><p class="text-xs">Rede: fatias cliente</p><h1 class="text-3xl font-black text-[#E6B952] mb-8">fatias2025</h1><button onclick="fecharWifi()" class="bg-white/10 text-white px-10 py-3 rounded-full text-xs font-bold uppercase border border-white/20">Fechar</button></div></div>
     <script>
-        // URL da sua API backend no Render
-        const RENDER_URL = "https://fatias-control-jesus.onrender.com";
-        const API_URL = window.location.hostname.includes("github.io") ? RENDER_URL : window.location.origin;
+        const API_URL = "/.netlify/functions/api";
 
-        const LOCAIS_PERMITIDOS = [{ lat: -5.890425, lon: -35.169790 }, { lat: -5.87639, lon: -35.18111 }];
-        const DISTANCIA_MAXIMA = 0.08;
-        
         const urlParams = new URLSearchParams(window.location.search);
         const pathParts = window.location.pathname.split('/');
         const mesa = urlParams.get('mesa') || pathParts[pathParts.length - 1] || "01";
@@ -74,20 +67,21 @@
                 notif.style.display = 'none';
                 setTimeout(() => { document.getElementById('texto-feedback').innerText = "⏳ ENVIADO!"; notif.style.display = 'block'; }, 50);
                 
-                fetch(`${API_URL}/enviar-chamado`, { 
+                fetch(API_URL, { 
                     method: 'POST', 
                     headers: {'Content-Type': 'application/json'}, 
-                    body: JSON.stringify({ mesa, acao }) 
+                    body: JSON.stringify({ mesa: parseInt(mesa), tipo: acao.toLowerCase(), origem: 'cliente' }) 
                 }).then(() => iniciarVigilancia());
             }
         }
 
         function iniciarVigilancia() {
             monitoramentoStatus = setInterval(() => {
-                fetch(`${API_URL}/status-atendimento/${mesa}`)
+                fetch(API_URL)
                 .then(res => res.json())
                 .then(data => {
-                    if (data.atendido) {
+                    const mesaData = data[mesa] || data[parseInt(mesa)];
+                    if (mesaData && mesaData.status === 'acknowledged') {
                         somFeedback.play().catch(() => {});
                         const msg = (tipoPedidoAtual === "Garçom") ? "✅ O GARÇOM ESTÁ A CAMINHO!" : "✅ A CONTA ESTÁ VINDO!";
                         document.getElementById('texto-feedback').innerText = msg;
