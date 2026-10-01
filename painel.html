@@ -7,8 +7,18 @@
     <title>Painel Jesus - Fatia's Control</title>
     <style>
         body { background: #000; color: #fff; font-family: sans-serif; overflow-y: auto; }
-        .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(90px, 1fr)); gap: 8px; }
-        .m { background: #064e3b; height: 120px; border-radius: 8px; border: 1px solid #065f46; }
+        
+        /* Classe Padrão: Cards com tamanho normal (Ampliado) */
+        .grid-ampliado { display: grid; grid-template-columns: repeat(auto-fill, minmax(110px, 1fr)); gap: 10px; }
+        .grid-ampliado .m { height: 130px; }
+
+        /* Classe Visão Geral: Cards menores para enxergar todas as mesas de uma vez */
+        .grid-geral { display: grid; grid-template-columns: repeat(auto-fill, minmax(65px, 1fr)); gap: 5px; }
+        .grid-geral .m { height: 85px; padding: 4px; }
+        .grid-geral .m .btn-box { gap: 2px; }
+        .grid-geral .m button { padding: 2px; font-size: 7px; }
+
+        .m { background: #064e3b; border-radius: 8px; border: 1px solid #065f46; transition: all 0.2s ease; }
         .ativa { background: #b91c1c !important; border-color: #f87171; animation: pulse 1s infinite; }
         @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.6; } }
         #setup-overlay { position: fixed; inset: 0; background: #000; z-index: 9999; display: flex; align-items: center; justify-content: center; cursor: pointer; }
@@ -24,16 +34,18 @@
     <header class="flex justify-between items-center mb-4">
         <h1 class="text-xl font-bold uppercase">MAPA <span style="color:#E6B952">FATIAS CONTROL</span></h1>
         <div class="flex gap-2">
-            <button onclick="minimizar()" class="bg-gray-800 p-2 rounded text-[10px] font-bold">Minimizar</button>
-            <button onclick="sair()" class="bg-red-900 p-2 rounded text-[10px] font-bold">Sair</button>
+            <!-- Botão único de Lupa com alternância de zoom -->
+            <button id="btn-zoom" onclick="alternarZoom()" class="bg-amber-600 hover:bg-amber-700 text-white px-3 py-2 rounded text-xs font-bold flex items-center gap-1 transition">
+                🔍 <span>Visão Geral</span>
+            </button>
+            <button onclick="sair()" class="bg-red-900 hover:bg-red-800 p-2 rounded text-xs font-bold">Sair</button>
         </div>
     </header>
 
-    <div id="grid" class="grid"></div>
+    <div id="grid" class="grid-ampliado"></div>
     <audio id="som" src="alerta.mp3" preload="auto"></audio>
 
     <script>
-        // Utiliza a API Serverless (Netlify/GitHub Functions)
         const API_URL = "/.netlify/functions/api";
 
         let estadoMesas = {};
@@ -42,7 +54,23 @@
         }
 
         let ultimoTotal = 0;
+        let modoGeral = false; // Alterna entre visão geral e ampliada
         const som = document.getElementById('som');
+
+        function alternarZoom() {
+            modoGeral = !modoGeral;
+            const grid = document.getElementById('grid');
+            const btn = document.getElementById('btn-zoom');
+            
+            if(modoGeral) {
+                grid.className = "grid-geral";
+                btn.innerHTML = "🔍 <span>Ampliar</span>";
+            } else {
+                grid.className = "grid-ampliado";
+                btn.innerHTML = "🔍 <span>Visão Geral</span>";
+            }
+            desenharGrade();
+        }
 
         function desenharGrade() {
             const grid = document.getElementById('grid');
@@ -55,9 +83,9 @@
                     <span class="text-[10px] font-bold">MESA ${i}</span>
                     ${m.ativa ? `
                         <span class="text-[8px] uppercase text-center font-bold">${m.acao}<br>(${m.quantidade}x)</span>
-                        <div class="flex flex-col gap-1 w-full">
-                            <button onclick="atender(${i})" class="bg-blue-600 text-[8px] p-1 rounded font-bold">OK</button>
-                            <button onclick="limpar(${i})" class="bg-black text-[8px] p-1 rounded border border-gray-600 uppercase">Limpar</button>
+                        <div class="btn-box flex flex-col gap-1 w-full">
+                            <button onclick="atender(${i})" class="bg-blue-600 text-[8px] p-1 rounded font-bold hover:bg-blue-500">OK</button>
+                            <button onclick="limpar(${i})" class="bg-black text-[8px] p-1 rounded border border-gray-600 uppercase hover:bg-gray-800">Limpar</button>
                         </div>
                     ` : '<span class="text-[8px] opacity-40">LIVRE</span>'}
                 `;
@@ -67,39 +95,35 @@
 
         function ativarPainel() { 
             som.play().then(() => { som.pause(); som.currentTime = 0; }).catch(() => {});
-            document.documentElement.requestFullscreen().catch(() => {});
             document.getElementById('setup-overlay').style.display = 'none';
             atualizar();
         }
 
-        function minimizar() { if (document.exitFullscreen) document.exitFullscreen().catch(() => {}); document.getElementById('setup-overlay').style.display = 'flex'; }
-        function sair() { if(confirm("Encerrar Jesus?")) window.location.href = "about:blank"; }
+        function sair() { if(confirm("Encerrar Painel?")) window.location.href = "about:blank"; }
 
         function atualizar() {
             fetch(API_URL)
             .then(res => res.json())
             .then(data => {
                 let totalAgora = 0;
-                // Mapeia o estado recebido da API serverless
                 for(let i = 1; i <= 50; i++) {
-                    if (data[i] || data[`mesa_${i}`]) {
-                        const item = data[i] || data[`mesa_${i}`];
+                    const item = data[i] || data[`mesa_${i}`];
+                    if (item && item.status === 'waiting') {
                         estadoMesas[i] = {
-                            ativa: item.status === 'waiting' || item.ativa,
-                            acao: item.pedido || item.acao || 'CHAMADO',
-                            quantidade: item.quantidade || 1
+                            ativa: true,
+                            acao: item.pedido ? item.pedido.toUpperCase() : 'CHAMADO',
+                            quantidade: 1
                         };
+                        totalAgora += 1;
                     } else {
                         estadoMesas[i] = { ativa: false, acao: '', quantidade: 0 };
                     }
-                    if(estadoMesas[i].ativa) totalAgora += estadoMesas[i].quantidade;
                 }
                 desenharGrade();
                 if(totalAgora > ultimoTotal) { som.currentTime = 0; som.play().catch(() => {}); }
                 ultimoTotal = totalAgora;
             })
             .catch(() => {
-                // Em caso de erro de rede, garante que a grade de mesas continue visível
                 desenharGrade();
             });
         }
@@ -120,7 +144,6 @@
             }).then(atualizar);
         }
 
-        // Desenha as mesas imediatamente ao abrir a página
         desenharGrade();
         setInterval(atualizar, 3000);
     </script>
