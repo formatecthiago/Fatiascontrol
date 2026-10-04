@@ -35,7 +35,6 @@
     </div>
 
     <div class="painel-container">
-        <!-- Input de 3 dígitos para mesa física ou avulsa -->
         <div class="etiqueta-mesa">
             MESA: 
             <input type="number" id="input-num-mesa" maxlength="3" oninput="if(this.value.length > 3) this.value = this.value.slice(0, 3)" class="bg-black/70 text-[#E6B952] font-black w-14 text-center border border-[#E6B952]/50 rounded px-1 outline-none">
@@ -62,11 +61,15 @@
         </div>
     </div>
 
-    <!-- SDKs do Firebase -->
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
 
     <script>
+        // CONFIGURAÇÕES DE GEOLOCALIZAÇÃO DO RESTAURANTE
+        const LATITUDE_RESTAURANTE = -5.890425;  // Altere para a sua latitude
+        const LONGITUDE_RESTAURANTE = -35.169790; // Altere para a sua longitude
+        const RAIO_MAXIMO_METROS = 20;            // Distância máxima em metros
+
         const firebaseConfig = {
             apiKey: "AIzaSyAf196vm_BP28YJWnATut2at74PfDqXleg",
             authDomain: "service-controll.firebaseapp.com",
@@ -80,6 +83,18 @@
 
         firebase.initializeApp(firebaseConfig);
         const db = firebase.database();
+
+        // Fórmula para calcular distância GPS em metros (Haversine)
+        function calcularDistanciaEmMetros(lat1, lon1, lat2, lon2) {
+            const R = 6371000; // Raio da Terra em metros
+            const dLat = (lat2 - lat1) * Math.PI / 180;
+            const dLon = (lon2 - lon1) * Math.PI / 180;
+            const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
+                      Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+                      Math.sin(dLon/2) * Math.sin(dLon/2);
+            const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+            return R * c;
+        }
 
         const urlParams = new URLSearchParams(window.location.search);
         const pathParts = window.location.pathname.split('/');
@@ -110,21 +125,44 @@
 
         function confirmarEnvio(acao) {
             const numMesaAtual = parseInt(inputMesa.value) || 1;
-            if(confirm(`Confirmar chamado de ${acao} para a MESA ${numMesaAtual}?`)) {
-                
-                const notif = document.getElementById('notificacao-atendimento');
-                document.getElementById('texto-feedback').innerText = "⏳ ENVIADO!";
-                notif.style.backgroundColor = "#1e40af";
-                notif.style.display = 'block';
 
-                db.ref('chamados/' + numMesaAtual).set({
-                    mesa: numMesaAtual,
-                    acao: acao,
-                    status: 'pendente',
-                    avulsa: numMesaAtual > 50,
-                    timestamp: Date.now()
-                });
+            if(!navigator.geolocation) {
+                alert("O seu navegador não suporta geolocalização. O chamado não pode ser enviado fora do local.");
+                return;
             }
+
+            // Pede o GPS do celular antes de disparar o chamado
+            navigator.geolocation.getCurrentPosition(
+                (posicao) => {
+                    const latCliente = posicao.coords.latitude;
+                    const lonCliente = posicao.coords.longitude;
+                    const distancia = calcularDistanciaEmMetros(latCliente, lonCliente, LATITUDE_RESTAURANTE, LONGITUDE_RESTAURANTE);
+
+                    if (distancia > RAIO_MAXIMO_METROS) {
+                        alert(`Você está fora do restaurante (${Math.round(distancia)}m de distância). O chamado só é permitido dentro do local.`);
+                        return;
+                    }
+
+                    if(confirm(`Confirmar chamado de ${acao} para a MESA ${numMesaAtual}?`)) {
+                        const notif = document.getElementById('notificacao-atendimento');
+                        document.getElementById('texto-feedback').innerText = "⏳ ENVIADO!";
+                        notif.style.backgroundColor = "#1e40af";
+                        notif.style.display = 'block';
+
+                        db.ref('chamados/' + numMesaAtual).set({
+                            mesa: numMesaAtual,
+                            acao: acao,
+                            status: 'pendente',
+                            avulsa: numMesaAtual > 50,
+                            timestamp: Date.now()
+                        });
+                    }
+                },
+                (erro) => {
+                    alert("Acesso à localização negado. Ative o GPS no navegador para chamar o atendimento.");
+                },
+                { enableHighAccuracy: true, timeout: 10000 }
+            );
         }
 
         function ouvirRetornoMesa(numMesa) {
