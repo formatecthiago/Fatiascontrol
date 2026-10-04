@@ -4,22 +4,21 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <script src="https://cdn.tailwindcss.com"></script>
-    <title>Painel Jesus - Fatia's Control</title>
+    <title>Painel Gerente Controlador</title>
     <style>
         body { background: #000; color: #fff; font-family: sans-serif; overflow-y: auto; }
         
-        /* Classe Padrão: Cards com tamanho normal (Ampliado) */
         .grid-ampliado { display: grid; grid-template-columns: repeat(auto-fill, minmax(110px, 1fr)); gap: 10px; }
-        .grid-ampliado .m { height: 130px; }
+        .grid-ampliado .m { height: 125px; }
 
-        /* Classe Visão Geral: Cards menores para enxergar todas as mesas de uma vez */
         .grid-geral { display: grid; grid-template-columns: repeat(auto-fill, minmax(65px, 1fr)); gap: 5px; }
         .grid-geral .m { height: 85px; padding: 4px; }
-        .grid-geral .m .btn-box { gap: 2px; }
         .grid-geral .m button { padding: 2px; font-size: 7px; }
 
         .m { background: #064e3b; border-radius: 8px; border: 1px solid #065f46; transition: all 0.2s ease; }
         .ativa { background: #b91c1c !important; border-color: #f87171; animation: pulse 1s infinite; }
+        .avulsa-ativa { background: #ea580c !important; border-color: #fb923c; animation: pulse 1s infinite; }
+
         @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.6; } }
         #setup-overlay { position: fixed; inset: 0; background: #000; z-index: 9999; display: flex; align-items: center; justify-content: center; cursor: pointer; }
     </style>
@@ -34,7 +33,6 @@
     <header class="flex justify-between items-center mb-4">
         <h1 class="text-xl font-bold uppercase">MAPA <span style="color:#E6B952">FATIAS CONTROL</span></h1>
         <div class="flex gap-2">
-            <!-- Botão único de Lupa com alternância de zoom -->
             <button id="btn-zoom" onclick="alternarZoom()" class="bg-amber-600 hover:bg-amber-700 text-white px-3 py-2 rounded text-xs font-bold flex items-center gap-1 transition">
                 🔍 <span>Visão Geral</span>
             </button>
@@ -45,107 +43,114 @@
     <div id="grid" class="grid-ampliado"></div>
     <audio id="som" src="alerta.mp3" preload="auto"></audio>
 
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+
     <script>
-        const API_URL = "/.netlify/functions/api";
+        const firebaseConfig = {
+            apiKey: "AIzaSyAf196vm_BP28YJWnATut2at74PfDqXleg",
+            authDomain: "service-controll.firebaseapp.com",
+            databaseURL: "https://service-controll-default-rtdb.firebaseio.com",
+            projectId: "service-controll",
+            storageBucket: "service-controll.firebasestorage.app",
+            messagingSenderId: "568413588202",
+            appId: "1:568413588202:web:a0fc12f49cc10bfc482593",
+            measurementId: "G-9DJW6KWLFG"
+        };
 
-        let estadoMesas = {};
-        for(let i = 1; i <= 50; i++) {
-            estadoMesas[i] = { ativa: false, acao: '', quantidade: 0 };
-        }
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.database();
 
-        let ultimoTotal = 0;
-        let modoGeral = false; // Alterna entre visão geral e ampliada
+        let chamadosAtivos = {};
+        let modoGeral = false;
+        let totalChamadosAntigo = 0;
         const som = document.getElementById('som');
 
         function alternarZoom() {
             modoGeral = !modoGeral;
             const grid = document.getElementById('grid');
             const btn = document.getElementById('btn-zoom');
-            
-            if(modoGeral) {
-                grid.className = "grid-geral";
-                btn.innerHTML = "🔍 <span>Ampliar</span>";
-            } else {
-                grid.className = "grid-ampliado";
-                btn.innerHTML = "🔍 <span>Visão Geral</span>";
-            }
+            grid.className = modoGeral ? "grid-geral" : "grid-ampliado";
+            btn.innerHTML = modoGeral ? "🔍 <span>Ampliar</span>" : "🔍 <span>Visão Geral</span>";
             desenharGrade();
         }
 
         function desenharGrade() {
             const grid = document.getElementById('grid');
             grid.innerHTML = '';
-            for(let i = 1; i <= 50; i++) {
-                const m = estadoMesas[i] || { ativa: false, acao: '', quantidade: 0 };
+
+            let listaMesas = [];
+            for(let i = 1; i <= 50; i++) listaMesas.push(i);
+
+            Object.keys(chamadosAtivos).forEach(num => {
+                const nMesa = parseInt(num);
+                if (nMesa > 50 && !listaMesas.includes(nMesa)) {
+                    listaMesas.push(nMesa);
+                }
+            });
+
+            listaMesas.forEach(i => {
+                const c = chamadosAtivos[i];
+                const estaAtiva = c && c.status === 'pendente';
+                const ehAvulsa = i > 50;
+
+                let classeEstilo = "m p-2 flex flex-col items-center justify-between ";
+                if (estaAtiva) {
+                    classeEstilo += ehAvulsa ? "avulsa-ativa" : "ativa";
+                }
+
                 const div = document.createElement('div');
-                div.className = `m p-2 flex flex-col items-center justify-between ${m.ativa ? 'ativa' : ''}`;
+                div.className = classeEstilo;
                 div.innerHTML = `
-                    <span class="text-[10px] font-bold">MESA ${i}</span>
-                    ${m.ativa ? `
-                        <span class="text-[8px] uppercase text-center font-bold">${m.acao}<br>(${m.quantidade}x)</span>
-                        <div class="btn-box flex flex-col gap-1 w-full">
+                    <span class="text-[10px] font-bold">${ehAvulsa ? 'AVULSA ' : 'MESA '}${i}</span>
+                    ${estaAtiva ? `
+                        <span class="text-[8px] uppercase text-center font-bold">${c.acao}</span>
+                        <div class="flex flex-col gap-1 w-full">
                             <button onclick="atender(${i})" class="bg-blue-600 text-[8px] p-1 rounded font-bold hover:bg-blue-500">OK</button>
                             <button onclick="limpar(${i})" class="bg-black text-[8px] p-1 rounded border border-gray-600 uppercase hover:bg-gray-800">Limpar</button>
                         </div>
                     ` : '<span class="text-[8px] opacity-40">LIVRE</span>'}
                 `;
                 grid.appendChild(div);
-            }
+            });
         }
 
-        function ativarPainel() { 
+        function ativarPainel() {
             som.play().then(() => { som.pause(); som.currentTime = 0; }).catch(() => {});
             document.getElementById('setup-overlay').style.display = 'none';
-            atualizar();
+            iniciarEscutaFirebase();
         }
 
         function sair() { if(confirm("Encerrar Painel?")) window.location.href = "about:blank"; }
 
-        function atualizar() {
-            fetch(API_URL)
-            .then(res => res.json())
-            .then(data => {
-                let totalAgora = 0;
-                for(let i = 1; i <= 50; i++) {
-                    const item = data[i] || data[`mesa_${i}`];
-                    if (item && item.status === 'waiting') {
-                        estadoMesas[i] = {
-                            ativa: true,
-                            acao: item.pedido ? item.pedido.toUpperCase() : 'CHAMADO',
-                            quantidade: 1
-                        };
-                        totalAgora += 1;
-                    } else {
-                        estadoMesas[i] = { ativa: false, acao: '', quantidade: 0 };
-                    }
+        function iniciarEscutaFirebase() {
+            db.ref('chamados').on('value', (snapshot) => {
+                chamadosAtivos = snapshot.val() || {};
+                
+                let totalPendentes = 0;
+                Object.values(chamadosAtivos).forEach(item => {
+                    if (item.status === 'pendente') totalPendentes++;
+                });
+
+                if (totalPendentes > totalChamadosAntigo) {
+                    som.currentTime = 0;
+                    som.play().catch(() => {});
                 }
-                desenharGrade();
-                if(totalAgora > ultimoTotal) { som.currentTime = 0; som.play().catch(() => {}); }
-                ultimoTotal = totalAgora;
-            })
-            .catch(() => {
+                totalChamadosAntigo = totalPendentes;
+
                 desenharGrade();
             });
         }
 
-        function atender(n) {
-            fetch(API_URL, {
-                method: 'POST',
-                headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify({ mesa: n, origem: 'painel', mensagem: 'O garçom está a caminho!' })
-            }).then(atualizar);
+        function atender(numMesa) {
+            db.ref('chamados/' + numMesa).update({ status: 'atendido' });
         }
 
-        function limpar(n) {
-            fetch(API_URL, {
-                method: 'POST',
-                headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify({ mesa: n, origem: 'clear' })
-            }).then(atualizar);
+        function limpar(numMesa) {
+            db.ref('chamados/' + numMesa).remove();
         }
 
         desenharGrade();
-        setInterval(atualizar, 3000);
     </script>
 </body>
 </html>
