@@ -7,11 +7,11 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700;900&display=swap" rel="stylesheet">
-    <title>Fatia's Control - Jesus</title>
+    <title>Fatia's Control - Cliente</title>
     <style>
         body, html { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; background-color: #000; display: flex; justify-content: center; align-items: center; font-family: 'Montserrat', sans-serif; touch-action: manipulation; -webkit-tap-highlight-color: transparent; user-select: none; }
         .painel-container { background-image: url('fundo.jpg'); background-size: contain; background-repeat: no-repeat; background-position: center; width: 100vw; height: 100vh; position: relative; }
-        .etiqueta-mesa { position: absolute; top: 36%; left: 14%; padding: 5px 15px; border: 2px solid #E6B952; border-radius: 10px; color: #E6B952; font-weight: 900; font-size: 14px; text-transform: uppercase; background: rgba(0,0,0,0.3); z-index: 15; }
+        .etiqueta-mesa { position: absolute; top: 32%; left: 14%; padding: 5px 12px; border: 2px solid #E6B952; border-radius: 10px; color: #E6B952; font-weight: 900; font-size: 13px; text-transform: uppercase; background: rgba(0,0,0,0.6); z-index: 15; display: flex; align-items: center; gap: 6px; }
         .grade-toque { position: absolute; top: 40%; bottom: 24%; left: 12%; right: 12%; display: grid; grid-template-columns: 1fr 1fr; grid-template-rows: 1fr 1fr; gap: 20px; z-index: 10; }
         .grade-rodape { position: absolute; bottom: 12%; left: 15%; right: 15%; height: 8%; display: grid; grid-template-columns: 1fr 1fr; gap: 60px; z-index: 10; }
         .btn-acao { background: transparent; border: none; outline: none; cursor: pointer; display: block; width: 100%; height: 100%; -webkit-tap-highlight-color: transparent; }
@@ -26,9 +26,21 @@
 </head>
 <body>
     <div id="notificacao-atendimento"><span id="texto-feedback">--</span></div>
-    <div id="overlay-inicio" onclick="solicitarPermissao()"><div class="text-center"><div class="btn-iniciar-text">INICIAR AGORA</div><div class="mt-4 text-[#E6B952] font-bold">MESA <span id="label-mesa-inicio">--</span></div></div></div>
+    
+    <div id="overlay-inicio" onclick="solicitarPermissao()">
+        <div class="text-center">
+            <div class="btn-iniciar-text">INICIAR AGORA</div>
+            <div class="mt-4 text-[#E6B952] font-bold">MESA <span id="label-mesa-inicio">--</span></div>
+        </div>
+    </div>
+
     <div class="painel-container">
-        <div class="etiqueta-mesa">MESA <span id="num-mesa-painel">--</span></div>
+        <!-- Input de 3 dígitos para mesa física ou avulsa -->
+        <div class="etiqueta-mesa">
+            MESA: 
+            <input type="number" id="input-num-mesa" maxlength="3" oninput="if(this.value.length > 3) this.value = this.value.slice(0, 3)" class="bg-black/70 text-[#E6B952] font-black w-14 text-center border border-[#E6B952]/50 rounded px-1 outline-none">
+        </div>
+
         <div class="grade-toque">
             <button onclick="confirmarEnvio('Garçom')" class="btn-acao"></button>
             <button onclick="confirmarEnvio('Conta')" class="btn-acao"></button>
@@ -40,57 +52,102 @@
             <button onclick="minimizarSistema()" class="btn-acao"></button>
         </div>
     </div>
-    <div id="modal-wifi"><div class="balao-wifi"><h2 class="text-[#E6B952] font-bold mb-4 uppercase">Wi-Fi Clientes</h2><p class="text-xs">Rede: fatias cliente</p><h1 class="text-3xl font-black text-[#E6B952] mb-8">fatias2025</h1><button onclick="fecharWifi()" class="bg-white/10 text-white px-10 py-3 rounded-full text-xs font-bold uppercase border border-white/20">Fechar</button></div></div>
+
+    <div id="modal-wifi">
+        <div class="balao-wifi">
+            <h2 class="text-[#E6B952] font-bold mb-4 uppercase">Wi-Fi Clientes</h2>
+            <p class="text-xs">Rede: fatias cliente</p>
+            <h1 class="text-3xl font-black text-[#E6B952] mb-8">fatias2025</h1>
+            <button onclick="fecharWifi()" class="bg-white/10 text-white px-10 py-3 rounded-full text-xs font-bold uppercase border border-white/20">Fechar</button>
+        </div>
+    </div>
+
+    <!-- SDKs do Firebase -->
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+
     <script>
-        const API_URL = "/.netlify/functions/api";
+        const firebaseConfig = {
+            apiKey: "AIzaSyAf196vm_BP28YJWnATut2at74PfDqXleg",
+            authDomain: "service-controll.firebaseapp.com",
+            databaseURL: "https://service-controll-default-rtdb.firebaseio.com",
+            projectId: "service-controll",
+            storageBucket: "service-controll.firebasestorage.app",
+            messagingSenderId: "568413588202",
+            appId: "1:568413588202:web:a0fc12f49cc10bfc482593",
+            measurementId: "G-9DJW6KWLFG"
+        };
+
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.database();
 
         const urlParams = new URLSearchParams(window.location.search);
         const pathParts = window.location.pathname.split('/');
-        const mesa = urlParams.get('mesa') || pathParts[pathParts.length - 1] || "01";
+        let mesaURL = urlParams.get('mesa') || pathParts[pathParts.length - 1] || "1";
+        mesaURL = parseInt(mesaURL) || 1;
 
-        document.getElementById('label-mesa-inicio').innerText = mesa;
-        document.getElementById('num-mesa-painel').innerText = mesa;
-        
+        const inputMesa = document.getElementById('input-num-mesa');
+        inputMesa.value = mesaURL;
+        document.getElementById('label-mesa-inicio').innerText = mesaURL;
+
+        inputMesa.addEventListener('change', () => {
+            const novaMesa = parseInt(inputMesa.value) || 1;
+            document.getElementById('label-mesa-inicio').innerText = novaMesa;
+            ouvirRetornoMesa(novaMesa);
+        });
+
         const somFeedback = new Audio('suave.mp3');
-        let monitoramentoStatus = null, tipoPedidoAtual = "";
+        let listenerAtivo = null;
 
         function solicitarPermissao() { iniciarSistema(); }
-        function iniciarSistema() { somFeedback.play().then(() => { somFeedback.pause(); somFeedback.currentTime = 0; }).catch(() => {}); document.getElementById('overlay-inicio').style.display = 'none'; }
+        function iniciarSistema() { 
+            somFeedback.play().then(() => { somFeedback.pause(); somFeedback.currentTime = 0; }).catch(() => {}); 
+            document.getElementById('overlay-inicio').style.display = 'none'; 
+            ouvirRetornoMesa(parseInt(inputMesa.value));
+        }
         function minimizarSistema() { document.getElementById('overlay-inicio').style.display = 'flex'; }
         function sairSistema() { if(confirm("Deseja encerrar o atendimento?")) window.location.href = "https://google.com"; }
-        
+
         function confirmarEnvio(acao) {
-            if(confirm(`Confirmar chamado de ${acao}?`)) {
-                tipoPedidoAtual = acao;
-                if (monitoramentoStatus) clearInterval(monitoramentoStatus);
-                const notif = document.getElementById('notificacao-atendimento');
-                notif.style.display = 'none';
-                setTimeout(() => { document.getElementById('texto-feedback').innerText = "⏳ ENVIADO!"; notif.style.display = 'block'; }, 50);
+            const numMesaAtual = parseInt(inputMesa.value) || 1;
+            if(confirm(`Confirmar chamado de ${acao} para a MESA ${numMesaAtual}?`)) {
                 
-                fetch(API_URL, { 
-                    method: 'POST', 
-                    headers: {'Content-Type': 'application/json'}, 
-                    body: JSON.stringify({ mesa: parseInt(mesa), tipo: acao.toLowerCase(), origem: 'cliente' }) 
-                }).then(() => iniciarVigilancia());
+                const notif = document.getElementById('notificacao-atendimento');
+                document.getElementById('texto-feedback').innerText = "⏳ ENVIADO!";
+                notif.style.backgroundColor = "#1e40af";
+                notif.style.display = 'block';
+
+                db.ref('chamados/' + numMesaAtual).set({
+                    mesa: numMesaAtual,
+                    acao: acao,
+                    status: 'pendente',
+                    avulsa: numMesaAtual > 50,
+                    timestamp: Date.now()
+                });
             }
         }
 
-        function iniciarVigilancia() {
-            monitoramentoStatus = setInterval(() => {
-                fetch(API_URL)
-                .then(res => res.json())
-                .then(data => {
-                    const mesaData = data[mesa] || data[parseInt(mesa)];
-                    if (mesaData && mesaData.status === 'acknowledged') {
-                        somFeedback.play().catch(() => {});
-                        const msg = (tipoPedidoAtual === "Garçom") ? "✅ O GARÇOM ESTÁ A CAMINHO!" : "✅ A CONTA ESTÁ VINDO!";
-                        document.getElementById('texto-feedback').innerText = msg;
-                        document.getElementById('notificacao-atendimento').style.backgroundColor = "#059669";
-                        clearInterval(monitoramentoStatus);
-                        setTimeout(() => { document.getElementById('notificacao-atendimento').style.display = 'none'; }, 6000);
-                    }
-                });
-            }, 2500);
+        function ouvirRetornoMesa(numMesa) {
+            if(listenerAtivo) listenerAtivo.off();
+
+            listenerAtivo = db.ref('chamados/' + numMesa);
+            listenerAtivo.on('value', (snapshot) => {
+                const data = snapshot.val();
+                const notif = document.getElementById('notificacao-atendimento');
+
+                if (data && data.status === 'atendido') {
+                    somFeedback.play().catch(() => {});
+                    const msg = (data.acao === "Garçom") ? "✅ O GARÇOM ESTÁ A CAMINHO!" : "✅ A CONTA ESTÁ VINDO!";
+                    document.getElementById('texto-feedback').innerText = msg;
+                    notif.style.backgroundColor = "#059669";
+                    notif.style.display = 'block';
+
+                    setTimeout(() => { 
+                        notif.style.display = 'none'; 
+                        db.ref('chamados/' + numMesa).remove();
+                    }, 6000);
+                }
+            });
         }
 
         function abrirWifi() { document.getElementById('modal-wifi').style.display = 'flex'; }
