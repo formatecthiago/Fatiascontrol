@@ -11,7 +11,13 @@
     <style>
         body, html { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; background-color: #000; display: flex; justify-content: center; align-items: center; font-family: 'Montserrat', sans-serif; touch-action: manipulation; -webkit-tap-highlight-color: transparent; user-select: none; }
         .painel-container { background-image: url('fundo.jpg'); background-size: contain; background-repeat: no-repeat; background-position: center; width: 100vw; height: 100vh; position: relative; }
-        .etiqueta-mesa { position: absolute; top: 32%; left: 14%; padding: 5px 12px; border: 2px solid #E6B952; border-radius: 10px; color: #E6B952; font-weight: 900; font-size: 13px; text-transform: uppercase; background: rgba(0,0,0,0.6); z-index: 15; display: flex; align-items: center; gap: 6px; }
+        
+        /* Bloco Informativo de Mesa e Campo de Ficha */
+        .bloco-identificacao { position: absolute; top: 30%; left: 12%; right: 12%; display: flex; justify-content: space-between; align-items: center; z-index: 15; }
+        .etiqueta-mesa-fixa { border: 2px solid #E6B952; border-radius: 10px; color: #E6B952; font-weight: 900; font-size: 13px; text-transform: uppercase; background: rgba(0,0,0,0.7); padding: 6px 12px; }
+        .box-ficha { display: flex; flex-direction: column; align-items: center; background: rgba(0,0,0,0.7); border: 2px solid #E6B952; border-radius: 10px; padding: 4px 10px; }
+        .input-ficha { background: transparent; color: #E6B952; font-weight: 900; font-size: 16px; width: 60px; text-align: center; outline: none; border-bottom: 1px solid #E6B952; }
+
         .grade-toque { position: absolute; top: 40%; bottom: 24%; left: 12%; right: 12%; display: grid; grid-template-columns: 1fr 1fr; grid-template-rows: 1fr 1fr; gap: 20px; z-index: 10; }
         .grade-rodape { position: absolute; bottom: 12%; left: 15%; right: 15%; height: 8%; display: grid; grid-template-columns: 1fr 1fr; gap: 60px; z-index: 10; }
         .btn-acao { background: transparent; border: none; outline: none; cursor: pointer; display: block; width: 100%; height: 100%; -webkit-tap-highlight-color: transparent; }
@@ -35,9 +41,19 @@
     </div>
 
     <div class="painel-container">
-        <div class="etiqueta-mesa">
-            MESA: 
-            <input type="number" id="input-num-mesa" maxlength="3" oninput="if(this.value.length > 3) this.value = this.value.slice(0, 3)" class="bg-black/70 text-[#E6B952] font-black w-14 text-center border border-[#E6B952]/50 rounded px-1 outline-none">
+        <!-- Identificação da Mesa (Fixa e Somente Leitura) + Campo de Ficha com 'Caso tenha' -->
+        <div class="bloco-identificacao">
+            <div class="etiqueta-mesa-fixa">
+                MESA <span id="num-mesa-exibicao" class="font-black text-white text-base">--</span>
+            </div>
+
+            <div class="box-ficha">
+                <div class="flex items-center gap-1">
+                    <span class="text-[#E6B952] text-[10px] font-bold uppercase">FICHA:</span>
+                    <input type="number" id="input-num-ficha" placeholder="---" autofocus maxlength="3" oninput="if(this.value.length > 3) this.value = this.value.slice(0, 3)" class="input-ficha">
+                </div>
+                <span class="text-[9px] text-gray-300 italic font-normal mt-0.5">caso tenha</span>
+            </div>
         </div>
 
         <div class="grade-toque">
@@ -66,9 +82,9 @@
 
     <script>
         // CONFIGURAÇÕES DE GEOLOCALIZAÇÃO DO RESTAURANTE
-        const LATITUDE_RESTAURANTE = -5.890425;  // Altere para a sua latitude
-        const LONGITUDE_RESTAURANTE = -35.169790; // Altere para a sua longitude
-        const RAIO_MAXIMO_METROS = 20;            // Distância máxima em metros
+        const LATITUDE_RESTAURANTE = -5.8863;  
+        const LONGITUDE_RESTAURANTE = -35.1764; 
+        const RAIO_MAXIMO_METROS = 20;            
 
         const firebaseConfig = {
             apiKey: "AIzaSyAf196vm_BP28YJWnATut2at74PfDqXleg",
@@ -84,9 +100,8 @@
         firebase.initializeApp(firebaseConfig);
         const db = firebase.database();
 
-        // Fórmula para calcular distância GPS em metros (Haversine)
         function calcularDistanciaEmMetros(lat1, lon1, lat2, lon2) {
-            const R = 6371000; // Raio da Terra em metros
+            const R = 6371000;
             const dLat = (lat2 - lat1) * Math.PI / 180;
             const dLon = (lon2 - lon1) * Math.PI / 180;
             const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
@@ -96,20 +111,17 @@
             return R * c;
         }
 
+        // Lê a mesa fixa diretamente da URL (?mesa=05 ou /mesa/05 ou /05)
         const urlParams = new URLSearchParams(window.location.search);
-        const pathParts = window.location.pathname.split('/');
-        let mesaURL = urlParams.get('mesa') || pathParts[pathParts.length - 1] || "1";
-        mesaURL = parseInt(mesaURL) || 1;
+        const pathParts = window.location.pathname.split('/').filter(p => p.length > 0);
+        let mesaDetectada = urlParams.get('mesa') || pathParts[pathParts.length - 1] || "01";
+        mesaDetectada = mesaDetectada.replace(/[^0-9]/g, '') || "01"; 
 
-        const inputMesa = document.getElementById('input-num-mesa');
-        inputMesa.value = mesaURL;
-        document.getElementById('label-mesa-inicio').innerText = mesaURL;
+        const numMesaFixa = parseInt(mesaDetectada);
 
-        inputMesa.addEventListener('change', () => {
-            const novaMesa = parseInt(inputMesa.value) || 1;
-            document.getElementById('label-mesa-inicio').innerText = novaMesa;
-            ouvirRetornoMesa(novaMesa);
-        });
+        // Exibe o número da mesa fixado sem permitir edição
+        document.getElementById('num-mesa-exibicao').innerText = numMesaFixa < 10 ? '0' + numMesaFixa : numMesaFixa;
+        document.getElementById('label-mesa-inicio').innerText = numMesaFixa;
 
         const somFeedback = new Audio('suave.mp3');
         let listenerAtivo = null;
@@ -118,20 +130,19 @@
         function iniciarSistema() { 
             somFeedback.play().then(() => { somFeedback.pause(); somFeedback.currentTime = 0; }).catch(() => {}); 
             document.getElementById('overlay-inicio').style.display = 'none'; 
-            ouvirRetornoMesa(parseInt(inputMesa.value));
+            ouvirRetornoMesa(numMesaFixa);
         }
         function minimizarSistema() { document.getElementById('overlay-inicio').style.display = 'flex'; }
         function sairSistema() { if(confirm("Deseja encerrar o atendimento?")) window.location.href = "https://google.com"; }
 
         function confirmarEnvio(acao) {
-            const numMesaAtual = parseInt(inputMesa.value) || 1;
+            const numFicha = document.getElementById('input-num-ficha').value.trim();
 
             if(!navigator.geolocation) {
                 alert("O seu navegador não suporta geolocalização. O chamado não pode ser enviado fora do local.");
                 return;
             }
 
-            // Pede o GPS do celular antes de disparar o chamado
             navigator.geolocation.getCurrentPosition(
                 (posicao) => {
                     const latCliente = posicao.coords.latitude;
@@ -143,17 +154,22 @@
                         return;
                     }
 
-                    if(confirm(`Confirmar chamado de ${acao} para a MESA ${numMesaAtual}?`)) {
+                    const msgConfirmacao = numFicha 
+                        ? `Confirmar chamado de ${acao} para MESA ${numMesaFixa} (FICHA ${numFicha})?`
+                        : `Confirmar chamado de ${acao} para MESA ${numMesaFixa}?`;
+
+                    if(confirm(msgConfirmacao)) {
                         const notif = document.getElementById('notificacao-atendimento');
                         document.getElementById('texto-feedback').innerText = "⏳ ENVIADO!";
                         notif.style.backgroundColor = "#1e40af";
                         notif.style.display = 'block';
 
-                        db.ref('chamados/' + numMesaAtual).set({
-                            mesa: numMesaAtual,
+                        // Envia para o Firebase vinculando a Mesa e a Ficha se houver
+                        db.ref('chamados/' + numMesaFixa).set({
+                            mesa: numMesaFixa,
+                            ficha: numFicha || null,
                             acao: acao,
                             status: 'pendente',
-                            avulsa: numMesaAtual > 50,
                             timestamp: Date.now()
                         });
                     }
