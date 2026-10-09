@@ -6,26 +6,29 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <title>Painel Gerente Controlador</title>
     <style>
-        body { background: #0a0a0a; color: #fff; font-family: sans-serif; overflow-y: auto; }
+        body { background: #000; color: #fff; font-family: sans-serif; overflow-y: auto; }
         
-        .grid-ampliado { display: grid; grid-template-columns: repeat(auto-fill, minmax(115px, 1fr)); gap: 10px; }
+        .grid-ampliado { display: grid; grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); gap: 10px; }
         .grid-ampliado .m { height: 135px; }
 
-        .grid-geral { display: grid; grid-template-columns: repeat(auto-fill, minmax(70px, 1fr)); gap: 5px; }
+        .grid-geral { display: grid; grid-template-columns: repeat(auto-fill, minmax(75px, 1fr)); gap: 6px; }
         .grid-geral .m { height: 95px; padding: 4px; }
-        .grid-geral .m button { padding: 2px; font-size: 7px; }
 
-        /* Mesas Livres / Translúcidas */
-        .m { background: rgba(255, 255, 255, 0.03); border-radius: 8px; border: 1px solid rgba(255, 255, 255, 0.1); opacity: 0.4; transition: all 0.3s ease; }
-        
-        /* Mesa com Chamado Pendente */
-        .ativa { background: #b91c1c !important; border-color: #f87171 !important; opacity: 1 !important; animation: pulse 1s infinite; box-shadow: 0 0 12px rgba(220, 38, 38, 0.6); }
-        
-        /* Mesa sendo Atendida (Verde Vivo) */
-        .em-atendimento { background: #059669 !important; border-color: #34d399 !important; opacity: 1 !important; box-shadow: 0 0 10px rgba(16, 185, 129, 0.4); }
+        /* Estado Padrão: Translúcido */
+        .m { background: rgba(15, 23, 42, 0.4); border-radius: 8px; border: 1px solid rgba(255,255,255,0.1); opacity: 0.35; transition: all 0.3s ease; }
+        .m.ativa-no-mapa { opacity: 1 !important; }
 
-        @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.7; } }
+        /* Estados de Cores por Tempo */
+        .verde-novo { background: #15803d !important; border-color: #22c55e !important; }
+        .amarelo-alerta { background: #b45309 !important; border-color: #f59e0b !important; }
+        .vermelho-critico { background: #b91c1c !important; border-color: #f87171 !important; }
+        .vermelho-pulsando { background: #991b1b !important; border-color: #ef4444 !important; animation: pulse 0.8s infinite; }
+        .verde-atendido { background: #064e3b !important; border-color: #059669 !important; opacity: 0.85 !important; }
+
+        @keyframes pulse { 0%, 100% { opacity: 1; transform: scale(1); } 50% { opacity: 0.5; transform: scale(0.97); } }
         #setup-overlay { position: fixed; inset: 0; background: #000; z-index: 9999; display: flex; align-items: center; justify-content: center; cursor: pointer; }
+        
+        #modal-msg { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.85); z-index: 10000; align-items: center; justify-content: center; backdrop-filter: blur(8px); }
     </style>
 </head>
 <body class="p-4">
@@ -35,9 +38,29 @@
         </div>
     </div>
 
-    <header class="flex justify-between items-center mb-4">
+    <!-- Modal para Enviar Mensagem Personalizada ao Cliente -->
+    <div id="modal-msg">
+        <div class="bg-gray-900 border-2 border-[#E6B952] p-6 rounded-2xl w-11/12 max-w-md text-center">
+            <h2 class="text-[#E6B952] font-black text-lg mb-2">ENVIAR MENSAGEM - MESA <span id="msg-num-mesa">--</span></h2>
+            <div class="flex flex-col gap-2 mb-4">
+                <button onclick="enviarFrase('Garçom a caminho!')" class="bg-blue-800 hover:bg-blue-700 text-white text-xs py-2 rounded font-bold">🚶‍♂️ Garçom a caminho!</button>
+                <button onclick="enviarFrase('Sua conta está sendo impressa.')" class="bg-green-800 hover:bg-green-700 text-white text-xs py-2 rounded font-bold">🧾 Sua conta está sendo impressa.</button>
+                <button onclick="enviarFrase('Pedido em preparação, já atendemos você!')" class="bg-amber-800 hover:bg-amber-700 text-white text-xs py-2 rounded font-bold">🍕 Pedido em preparação!</button>
+            </div>
+            <input type="text" id="input-msg-custom" placeholder="Ou digite uma mensagem..." class="w-full bg-black border border-gray-700 rounded p-2 text-white text-xs mb-4 outline-none focus:border-[#E6B952]">
+            <div class="flex justify-between gap-2">
+                <button onclick="fecharModalMsg()" class="w-1/2 bg-gray-700 text-white text-xs py-2 rounded font-bold">Cancelar</button>
+                <button onclick="enviarMsgCustomizada()" class="w-1/2 bg-[#E6B952] text-black text-xs py-2 rounded font-bold">Enviar</button>
+            </div>
+        </div>
+    </div>
+
+    <header class="flex flex-wrap justify-between items-center gap-2 mb-4">
         <h1 class="text-xl font-bold uppercase">MAPA <span style="color:#E6B952">FATIAS CONTROL</span></h1>
         <div class="flex gap-2">
+            <button id="btn-filtro" onclick="alternarFiltro()" class="bg-indigo-700 hover:bg-indigo-600 text-white px-3 py-2 rounded text-xs font-bold transition">
+                👁️ <span>Apenas Ativas</span>
+            </button>
             <button id="btn-zoom" onclick="alternarZoom()" class="bg-amber-600 hover:bg-amber-700 text-white px-3 py-2 rounded text-xs font-bold transition">
                 🔍 <span>Visão Geral</span>
             </button>
@@ -68,48 +91,84 @@
 
         let chamadosAtivos = {};
         let modoGeral = false;
+        let apenasAtivas = false;
         let totalChamadosAntigo = 0;
+        let mesaSelecionadaMsg = null;
         const som = document.getElementById('som');
+
+        // Atualiza a tela a cada 1 segundo para atualizar o contador de tempo das cores
+        setInterval(() => { desenharGrade(); }, 1000);
 
         function alternarZoom() {
             modoGeral = !modoGeral;
-            const grid = document.getElementById('grid');
-            const btn = document.getElementById('btn-zoom');
-            grid.className = modoGeral ? "grid-geral" : "grid-ampliado";
-            btn.innerHTML = modoGeral ? "🔍 <span>Ampliar</span>" : "🔍 <span>Visão Geral</span>";
+            document.getElementById('grid').className = modoGeral ? "grid-geral" : "grid-ampliado";
+            document.getElementById('btn-zoom').innerHTML = modoGeral ? "🔍 <span>Ampliar</span>" : "🔍 <span>Visão Geral</span>";
+            desenharGrade();
+        }
+
+        function alternarFiltro() {
+            apenasAtivas = !apenasAtivas;
+            document.getElementById('btn-filtro').innerHTML = apenasAtivas ? "👁️ <span>Todas as Mesas</span>" : "👁️ <span>Apenas Ativas</span>";
             desenharGrade();
         }
 
         function desenharGrade() {
             const grid = document.getElementById('grid');
             grid.innerHTML = '';
+            const agora = Date.now();
 
             for(let i = 1; i <= 50; i++) {
                 const c = chamadosAtivos[i];
                 const estaPendente = c && c.status === 'pendente';
-                const estaAtendido = c && c.status === 'atendido';
+                const foiAtendido = c && c.status === 'atendido';
+                
+                // Regra de permanência de 10 minutos (600.000 ms)
+                const dentroDos10Min = foiAtendido && c.timestampAtendimento && (agora - c.timestampAtendimento < 600000);
 
-                let classeEstilo = "m p-2 flex flex-col items-center justify-between ";
-                if (estaPendente) classeEstilo += "ativa";
-                else if (estaAtendido) classeEstilo += "em-atendimento";
+                let classeCor = "";
+                let tempoDecorridoSeg = 0;
+
+                if (estaPendente) {
+                    tempoDecorridoSeg = Math.floor((agora - c.timestamp) / 1000);
+                    if (tempoDecorridoSeg <= 40) classeCor = "verde-novo ativa-no-mapa";
+                    else if (tempoDecorridoSeg <= 90) classeCor = "amarelo-alerta ativa-no-mapa";
+                    else if (tempoDecorridoSeg <= 120) classeCor = "vermelho-critico ativa-no-mapa";
+                    else classeCor = "vermelho-pulsando ativa-no-mapa";
+                } else if (dentroDos10Min) {
+                    classeCor = "verde-atendido ativa-no-mapa";
+                }
+
+                // Se o filtro 'Apenas Ativas' estiver ligado, esconde mesas translúcidas
+                if (apenasAtivas && !estaPendente && !dentroDos10Min) {
+                    continue;
+                }
 
                 const div = document.createElement('div');
-                div.className = classeEstilo;
+                div.className = `m p-2 flex flex-col items-center justify-between ${classeCor}`;
                 
-                let textoAcao = c ? c.acao : '';
-                let textoFicha = (c && c.ficha) ? `<span class="text-[9px] bg-black/60 px-1 rounded text-yellow-300 font-black">F: ${c.ficha}</span>` : '';
+                let textoFicha = (c && c.ficha) ? `<span class="text-[9px] bg-black/70 px-1 rounded text-yellow-300 font-black">F: ${c.ficha}</span>` : '';
+                let tempoTexto = estaPendente ? `<span class="text-[9px] font-mono font-bold">${tempoDecorridoSeg}s</span>` : '';
 
                 div.innerHTML = `
-                    <span class="text-[10px] font-bold">MESA ${i < 10 ? '0' + i : i}</span>
-                    ${(estaPendente || estaAtendido) ? `
-                        <div class="text-center flex flex-col items-center">
-                            <span class="text-[8px] uppercase font-bold">${textoAcao}</span>${textoFicha}
+                    <div class="flex justify-between w-full items-center">
+                        <span class="text-[10px] font-bold">MESA ${i}</span>
+                        ${tempoTexto}
+                    </div>
+
+                    ${estaPendente ? `
+                        <div class="text-center flex flex-col items-center my-1">
+                            <span class="text-[8px] uppercase font-bold">${c.acao}</span>${textoFicha}
                         </div>
                         <div class="flex flex-col gap-1 w-full">
-                            <button onclick="atender(${i})" class="bg-blue-600 text-[8px] p-1 rounded font-bold hover:bg-blue-500">OK</button>
-                            <button onclick="enviarMensagemPersonalizada(${i})" class="bg-amber-600 text-[8px] p-1 rounded font-bold hover:bg-amber-500">💬 MSG</button>
-                            <button onclick="limpar(${i})" class="bg-black text-[8px] p-1 rounded border border-gray-600 uppercase hover:bg-gray-800">Limpar</button>
+                            <div class="flex gap-1 w-full">
+                                <button onclick="atender(${i})" class="bg-blue-600 text-[8px] p-1 rounded font-bold hover:bg-blue-500 w-1/2">OK</button>
+                                <button onclick="abrirModalMsg(${i})" class="bg-amber-600 text-[8px] p-1 rounded font-bold hover:bg-amber-500 w-1/2">💬</button>
+                            </div>
+                            <button onclick="limpar(${i})" class="bg-black text-[8px] p-0.5 rounded border border-gray-600 uppercase hover:bg-gray-800">Limpar</button>
                         </div>
+                    ` : dentroDos10Min ? `
+                        <span class="text-[8px] text-green-300 font-bold">ATENDIDA</span>
+                        <button onclick="abrirModalMsg(${i})" class="bg-amber-600 text-[8px] p-1 rounded font-bold hover:bg-amber-500 w-full mb-1">💬 Msg</button>
                     ` : '<span class="text-[8px] opacity-40">LIVRE</span>'}
                 `;
                 grid.appendChild(div);
@@ -144,29 +203,41 @@
         }
 
         function atender(numMesa) {
-            db.ref('chamados/' + numMesa).update({ status: 'atendido' });
+            db.ref('chamados/' + numMesa).update({ 
+                status: 'atendido',
+                timestampAtendimento: Date.now()
+            });
         }
 
         function limpar(numMesa) {
             db.ref('chamados/' + numMesa).remove();
         }
 
-        function enviarMensagemPersonalizada(numMesa) {
-            const opcao = prompt("Escolha uma opção de resposta rápida para a MESA " + numMesa + ":\n\n1 - O garçom já está a caminho!\n2 - Seu pedido está em preparo.\n3 - Aguarde só 1 minuto, por favor.\n\nOu digite uma mensagem personalizada abaixo:", "1");
-            
-            if (!opcao) return;
+        /* Funções de Envio de Mensagem ao Cliente */
+        function abrirModalMsg(numMesa) {
+            mesaSelecionadaMsg = numMesa;
+            document.getElementById('msg-num-mesa').innerText = numMesa;
+            document.getElementById('input-msg-custom').value = '';
+            document.getElementById('modal-msg').style.display = 'flex';
+        }
 
-            let mensagem = opcao;
-            if (opcao === "1") mensagem = "O garçom já está a caminho da sua mesa!";
-            else if (opcao === "2") mensagem = "Sua solicitação/pedido está em preparo!";
-            else if (opcao === "3") mensagem = "Aguarde só 1 minuto, já vamos lhe atender.";
+        function fecharModalMsg() {
+            document.getElementById('modal-msg').style.display = 'none';
+            mesaSelecionadaMsg = null;
+        }
 
-            db.ref('chamados/' + numMesa).update({
-                mensagemPersonalizada: mensagem,
-                timestampMensagem: Date.now()
-            });
+        function enviarFrase(texto) {
+            if(!mesaSelecionadaMsg) return;
+            db.ref('chamados/' + mesaSelecionadaMsg).update({ mensagemGerente: texto });
+            fecharModalMsg();
+        }
 
-            alert("Mensagem enviada para a Mesa " + numMesa + "!");
+        function enviarMsgCustomizada() {
+            const texto = document.getElementById('input-msg-custom').value.trim();
+            if(texto && mesaSelecionadaMsg) {
+                db.ref('chamados/' + mesaSelecionadaMsg).update({ mensagemGerente: texto });
+                fecharModalMsg();
+            }
         }
 
         desenharGrade();
