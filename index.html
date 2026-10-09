@@ -12,13 +12,13 @@
         body, html { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; background-color: #000; display: flex; justify-content: center; align-items: center; font-family: 'Montserrat', sans-serif; touch-action: manipulation; -webkit-tap-highlight-color: transparent; user-select: none; }
         .painel-container { background-image: url('fundo.jpg'); background-size: contain; background-repeat: no-repeat; background-position: center; width: 100vw; height: 100vh; position: relative; }
         
-        /* Bloco Informativo de Mesa e Campo de Ficha */
-        .bloco-identificacao { position: absolute; top: 30%; left: 12%; right: 12%; display: flex; justify-content: space-between; align-items: center; z-index: 15; }
+        /* Bloco Informativo de Mesa e Ficha Rebaixado para não cobrir a Logo */
+        .bloco-identificacao { position: absolute; top: 36%; left: 12%; right: 12%; display: flex; justify-content: space-between; align-items: center; z-index: 15; }
         .etiqueta-mesa-fixa { border: 2px solid #E6B952; border-radius: 10px; color: #E6B952; font-weight: 900; font-size: 13px; text-transform: uppercase; background: rgba(0,0,0,0.7); padding: 6px 12px; }
         .box-ficha { display: flex; flex-direction: column; align-items: center; background: rgba(0,0,0,0.7); border: 2px solid #E6B952; border-radius: 10px; padding: 4px 10px; }
         .input-ficha { background: transparent; color: #E6B952; font-weight: 900; font-size: 16px; width: 60px; text-align: center; outline: none; border-bottom: 1px solid #E6B952; }
 
-        .grade-toque { position: absolute; top: 40%; bottom: 24%; left: 12%; right: 12%; display: grid; grid-template-columns: 1fr 1fr; grid-template-rows: 1fr 1fr; gap: 20px; z-index: 10; }
+        .grade-toque { position: absolute; top: 43%; bottom: 24%; left: 12%; right: 12%; display: grid; grid-template-columns: 1fr 1fr; grid-template-rows: 1fr 1fr; gap: 20px; z-index: 10; }
         .grade-rodape { position: absolute; bottom: 12%; left: 15%; right: 15%; height: 8%; display: grid; grid-template-columns: 1fr 1fr; gap: 60px; z-index: 10; }
         .btn-acao { background: transparent; border: none; outline: none; cursor: pointer; display: block; width: 100%; height: 100%; -webkit-tap-highlight-color: transparent; }
         #notificacao-atendimento { display: none; position: fixed; top: 20px; left: 50%; transform: translateX(-50%); background: #1e40af; color: white; padding: 15px 30px; border-radius: 50px; font-weight: bold; box-shadow: 0 10px 20px rgba(0,0,0,0.5); z-index: 5000; border: 2px solid #3b82f6; text-align: center; width: 85%; animation: slideIn 0.4s ease-out; }
@@ -41,7 +41,7 @@
     </div>
 
     <div class="painel-container">
-        <!-- Identificação da Mesa (Fixa e Somente Leitura) + Campo de Ficha com 'Caso tenha' -->
+        <!-- Identificação da Mesa e Ficha Alinhadas e Rebaixadas -->
         <div class="bloco-identificacao">
             <div class="etiqueta-mesa-fixa">
                 MESA <span id="num-mesa-exibicao" class="font-black text-white text-base">--</span>
@@ -81,10 +81,12 @@
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
 
     <script>
-        // CONFIGURAÇÕES DE GEOLOCALIZAÇÃO DO RESTAURANTE
-        const LATITUDE_RESTAURANTE = -5.8863;  
-        const LONGITUDE_RESTAURANTE = -35.1764; 
-        const RAIO_MAXIMO_METROS = 20;            
+        // GEOLOCALIZAÇÃO DUPLA (RESTAURANTE + RESIDÊNCIA)
+        const LOCAIS_PERMITIDOS = [
+            { nome: "Restaurante", lat: -5.8863, lon: -35.1764 },
+            { nome: "Residência",  lat: -5.890467, lon: -35.169767 }
+        ];
+        const RAIO_MAXIMO_METROS = 20;
 
         const firebaseConfig = {
             apiKey: "AIzaSyAf196vm_BP28YJWnATut2at74PfDqXleg",
@@ -111,7 +113,6 @@
             return R * c;
         }
 
-        // Lê a mesa fixa diretamente da URL (?mesa=05 ou /mesa/05 ou /05)
         const urlParams = new URLSearchParams(window.location.search);
         const pathParts = window.location.pathname.split('/').filter(p => p.length > 0);
         let mesaDetectada = urlParams.get('mesa') || pathParts[pathParts.length - 1] || "01";
@@ -119,7 +120,6 @@
 
         const numMesaFixa = parseInt(mesaDetectada);
 
-        // Exibe o número da mesa fixado sem permitir edição
         document.getElementById('num-mesa-exibicao').innerText = numMesaFixa < 10 ? '0' + numMesaFixa : numMesaFixa;
         document.getElementById('label-mesa-inicio').innerText = numMesaFixa;
 
@@ -147,10 +147,18 @@
                 (posicao) => {
                     const latCliente = posicao.coords.latitude;
                     const lonCliente = posicao.coords.longitude;
-                    const distancia = calcularDistanciaEmMetros(latCliente, lonCliente, LATITUDE_RESTAURANTE, LONGITUDE_RESTAURANTE);
 
-                    if (distancia > RAIO_MAXIMO_METROS) {
-                        alert(`Você está fora do restaurante (${Math.round(distancia)}m de distância). O chamado só é permitido dentro do local.`);
+                    let dentroDoLimite = false;
+                    let menorDistancia = Infinity;
+
+                    LOCAIS_PERMITIDOS.forEach(local => {
+                        const dist = calcularDistanciaEmMetros(latCliente, lonCliente, local.lat, local.lon);
+                        if (dist < menorDistancia) menorDistancia = dist;
+                        if (dist <= RAIO_MAXIMO_METROS) dentroDoLimite = true;
+                    });
+
+                    if (!dentroDoLimite) {
+                        alert(`Acesso bloqueado: você está fora da área permitida (${Math.round(menorDistancia)}m do ponto mais próximo).`);
                         return;
                     }
 
@@ -164,7 +172,6 @@
                         notif.style.backgroundColor = "#1e40af";
                         notif.style.display = 'block';
 
-                        // Envia para o Firebase vinculando a Mesa e a Ficha se houver
                         db.ref('chamados/' + numMesaFixa).set({
                             mesa: numMesaFixa,
                             ficha: numFicha || null,
