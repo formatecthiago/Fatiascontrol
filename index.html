@@ -12,13 +12,12 @@
         body, html { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; background-color: #000; display: flex; justify-content: center; align-items: center; font-family: 'Montserrat', sans-serif; touch-action: manipulation; -webkit-tap-highlight-color: transparent; user-select: none; }
         .painel-container { background-image: url('fundo.jpg'); background-size: contain; background-repeat: no-repeat; background-position: center; width: 100vw; height: 100vh; position: relative; }
         
-        /* Bloco Informativo de Mesa e Ficha Rebaixado para não cobrir a Logo */
-        .bloco-identificacao { position: absolute; top: 36%; left: 12%; right: 12%; display: flex; justify-content: space-between; align-items: center; z-index: 15; }
-        .etiqueta-mesa-fixa { border: 2px solid #E6B952; border-radius: 10px; color: #E6B952; font-weight: 900; font-size: 13px; text-transform: uppercase; background: rgba(0,0,0,0.7); padding: 6px 12px; }
-        .box-ficha { display: flex; flex-direction: column; align-items: center; background: rgba(0,0,0,0.7); border: 2px solid #E6B952; border-radius: 10px; padding: 4px 10px; }
-        .input-ficha { background: transparent; color: #E6B952; font-weight: 900; font-size: 16px; width: 60px; text-align: center; outline: none; border-bottom: 1px solid #E6B952; }
+        .bloco-identificacao { position: absolute; top: 31%; left: 12%; right: 12%; display: grid; grid-template-columns: 1fr 1fr; gap: 20px; z-index: 15; }
+        .etiqueta-mesa-fixa { border: 2px solid #E6B952; border-radius: 10px; color: #E6B952; font-weight: 900; font-size: 13px; text-transform: uppercase; background: rgba(0,0,0,0.7); display: flex; align-items: center; justify-content: center; gap: 6px; width: 100%; height: 100%; min-height: 48px; box-sizing: border-box; }
+        .box-ficha { display: flex; flex-direction: column; align-items: center; justify-content: center; background: rgba(0,0,0,0.7); border: 2px solid #E6B952; border-radius: 10px; padding: 4px 6px; width: 100%; min-height: 48px; box-sizing: border-box; }
+        .input-ficha { background: transparent; color: #E6B952; font-weight: 900; font-size: 15px; width: 50px; text-align: center; outline: none; border-bottom: 1px solid #E6B952; }
 
-        .grade-toque { position: absolute; top: 43%; bottom: 24%; left: 12%; right: 12%; display: grid; grid-template-columns: 1fr 1fr; grid-template-rows: 1fr 1fr; gap: 20px; z-index: 10; }
+        .grade-toque { position: absolute; top: 43%; bottom: 22%; left: 12%; right: 12%; display: grid; grid-template-columns: 1fr 1fr; grid-template-rows: 1fr 1fr; gap: 20px; z-index: 10; }
         .grade-rodape { position: absolute; bottom: 12%; left: 15%; right: 15%; height: 8%; display: grid; grid-template-columns: 1fr 1fr; gap: 60px; z-index: 10; }
         .btn-acao { background: transparent; border: none; outline: none; cursor: pointer; display: block; width: 100%; height: 100%; -webkit-tap-highlight-color: transparent; }
         #notificacao-atendimento { display: none; position: fixed; top: 20px; left: 50%; transform: translateX(-50%); background: #1e40af; color: white; padding: 15px 30px; border-radius: 50px; font-weight: bold; box-shadow: 0 10px 20px rgba(0,0,0,0.5); z-index: 5000; border: 2px solid #3b82f6; text-align: center; width: 85%; animation: slideIn 0.4s ease-out; }
@@ -41,10 +40,10 @@
     </div>
 
     <div class="painel-container">
-        <!-- Identificação da Mesa e Ficha Alinhadas e Rebaixadas -->
         <div class="bloco-identificacao">
             <div class="etiqueta-mesa-fixa">
-                MESA <span id="num-mesa-exibicao" class="font-black text-white text-base">--</span>
+                <span>MESA</span>
+                <span id="num-mesa-exibicao" class="font-black text-white text-base">--</span>
             </div>
 
             <div class="box-ficha">
@@ -52,7 +51,7 @@
                     <span class="text-[#E6B952] text-[10px] font-bold uppercase">FICHA:</span>
                     <input type="number" id="input-num-ficha" placeholder="---" autofocus maxlength="3" oninput="if(this.value.length > 3) this.value = this.value.slice(0, 3)" class="input-ficha">
                 </div>
-                <span class="text-[9px] text-gray-300 italic font-normal mt-0.5">caso tenha</span>
+                <span class="text-[9px] text-gray-300 italic font-normal">caso tenha</span>
             </div>
         </div>
 
@@ -81,7 +80,6 @@
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
 
     <script>
-        // GEOLOCALIZAÇÃO DUPLA (RESTAURANTE + RESIDÊNCIA)
         const LOCAIS_PERMITIDOS = [
             { nome: "Restaurante", lat: -5.8863, lon: -35.1764 },
             { nome: "Residência",  lat: -5.890467, lon: -35.169767 }
@@ -125,8 +123,16 @@
 
         const somFeedback = new Audio('suave.mp3');
         let listenerAtivo = null;
+        let ultimaMensagemRecebida = "";
 
-        function solicitarPermissao() { iniciarSistema(); }
+        function solicitarPermissao() { 
+            // Solicita permissão de Notificação do Sistema para o caso do celular no bolso
+            if ("Notification" in window && Notification.permission !== "granted") {
+                Notification.requestPermission();
+            }
+            iniciarSistema(); 
+        }
+
         function iniciarSistema() { 
             somFeedback.play().then(() => { somFeedback.pause(); somFeedback.currentTime = 0; }).catch(() => {}); 
             document.getElementById('overlay-inicio').style.display = 'none'; 
@@ -196,17 +202,39 @@
                 const data = snapshot.val();
                 const notif = document.getElementById('notificacao-atendimento');
 
-                if (data && data.status === 'atendido') {
-                    somFeedback.play().catch(() => {});
-                    const msg = (data.acao === "Garçom") ? "✅ O GARÇOM ESTÁ A CAMINHO!" : "✅ A CONTA ESTÁ VINDO!";
-                    document.getElementById('texto-feedback').innerText = msg;
-                    notif.style.backgroundColor = "#059669";
-                    notif.style.display = 'block';
+                if (data) {
+                    // Recebimento de Mensagem Personalizada do Gerente
+                    if (data.mensagemPersonalizada && data.mensagemPersonalizada !== ultimaMensagemRecebida) {
+                        ultimaMensagemRecebida = data.mensagemPersonalizada;
+                        somFeedback.play().catch(() => {});
+                        document.getElementById('texto-feedback').innerText = "💬 " + data.mensagemPersonalizada;
+                        notif.style.backgroundColor = "#d97706"; // Amarelo
+                        notif.style.display = 'block';
 
-                    setTimeout(() => { 
-                        notif.style.display = 'none'; 
-                        db.ref('chamados/' + numMesa).remove();
-                    }, 6000);
+                        // Se o celular estiver com a tela desligada/no bolso e aceitou notificações
+                        if ("Notification" in window && Notification.permission === "granted") {
+                            new Notification("Fatia's Control - Mesa " + numMesa, {
+                                body: data.mensagemPersonalizada,
+                                icon: "fundo.jpg"
+                            });
+                        }
+
+                        setTimeout(() => { notif.style.display = 'none'; }, 8000);
+                    }
+
+                    // Recebimento de confirmação de Atendimento
+                    else if (data.status === 'atendido') {
+                        somFeedback.play().catch(() => {});
+                        const msg = (data.acao === "Garçom") ? "✅ O GARÇOM ESTÁ A CAMINHO!" : "✅ A CONTA ESTÁ VINDO!";
+                        document.getElementById('texto-feedback').innerText = msg;
+                        notif.style.backgroundColor = "#059669";
+                        notif.style.display = 'block';
+
+                        setTimeout(() => { 
+                            notif.style.display = 'none'; 
+                            db.ref('chamados/' + numMesa).remove();
+                        }, 6000);
+                    }
                 }
             });
         }
