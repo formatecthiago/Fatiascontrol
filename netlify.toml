@@ -1,1 +1,0 @@
-[[redirects]]\n  from = "/cliente"\n  to = "/path-to-cliente"\n  status = 302\n  force = true\n\n[[redirects]]\n  from = "/operador"\n  to = "/path-to-operador"\n  status = 302\n  force = true
