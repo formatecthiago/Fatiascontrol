@@ -12,10 +12,60 @@
         body, html { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; background-color: #000; display: flex; justify-content: center; align-items: center; font-family: 'Montserrat', sans-serif; touch-action: manipulation; -webkit-tap-highlight-color: transparent; user-select: none; }
         .painel-container { background-image: url('fundo.jpg'); background-size: contain; background-repeat: no-repeat; background-position: center; width: 100vw; height: 100vh; position: relative; }
         
-        .bloco-identificacao { position: absolute; top: 31%; left: 12%; right: 12%; display: grid; grid-template-columns: 1fr 1fr; gap: 20px; z-index: 15; }
-        .etiqueta-mesa-fixa { border: 2px solid #E6B952; border-radius: 10px; color: #E6B952; font-weight: 900; font-size: 13px; text-transform: uppercase; background: rgba(0,0,0,0.7); display: flex; align-items: center; justify-content: center; gap: 6px; width: 100%; height: 100%; min-height: 48px; box-sizing: border-box; }
-        .box-ficha { display: flex; flex-direction: column; align-items: center; justify-content: center; background: rgba(0,0,0,0.7); border: 2px solid #E6B952; border-radius: 10px; padding: 4px 6px; width: 100%; min-height: 48px; box-sizing: border-box; }
-        .input-ficha { background: transparent; color: #E6B952; font-weight: 900; font-size: 15px; width: 50px; text-align: center; outline: none; border-bottom: 1px solid #E6B952; }
+        /* Bloco Superior com a mesma largura e alinhamento exato das colunas de baixo */
+        .bloco-identificacao { 
+            position: absolute; 
+            top: 31%; 
+            left: 12%; 
+            right: 12%; 
+            display: grid; 
+            grid-template-columns: 1fr 1fr; 
+            gap: 20px; 
+            z-index: 15; 
+        }
+
+        .etiqueta-mesa-fixa { 
+            border: 2px solid #E6B952; 
+            border-radius: 10px; 
+            color: #E6B952; 
+            font-weight: 900; 
+            font-size: 13px; 
+            text-transform: uppercase; 
+            background: rgba(0,0,0,0.7); 
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            width: 100%;
+            height: 100%;
+            min-height: 48px;
+            box-sizing: border-box;
+        }
+
+        .box-ficha { 
+            display: flex; 
+            flex-direction: column; 
+            align-items: center; 
+            justify-content: center;
+            background: rgba(0,0,0,0.7); 
+            border: 2px solid #E6B952; 
+            border-radius: 10px; 
+            padding: 4px 6px; 
+            width: 100%;
+            min-height: 48px;
+            box-sizing: border-box;
+        }
+
+        .input-ficha { 
+            background: transparent; 
+            color: #E6B952; 
+            font-weight: 900; 
+            font-size: 15px; 
+            width: 50px; 
+            text-align: center; 
+            outline: none; 
+            border-bottom: 1px solid #E6B952; 
+        }
 
         .grade-toque { position: absolute; top: 43%; bottom: 22%; left: 12%; right: 12%; display: grid; grid-template-columns: 1fr 1fr; grid-template-rows: 1fr 1fr; gap: 20px; z-index: 10; }
         .grade-rodape { position: absolute; bottom: 12%; left: 15%; right: 15%; height: 8%; display: grid; grid-template-columns: 1fr 1fr; gap: 60px; z-index: 10; }
@@ -123,16 +173,8 @@
 
         const somFeedback = new Audio('suave.mp3');
         let listenerAtivo = null;
-        let ultimaMensagemRecebida = "";
 
-        function solicitarPermissao() { 
-            // Solicita permissão de Notificação do Sistema para o caso do celular no bolso
-            if ("Notification" in window && Notification.permission !== "granted") {
-                Notification.requestPermission();
-            }
-            iniciarSistema(); 
-        }
-
+        function solicitarPermissao() { iniciarSistema(); }
         function iniciarSistema() { 
             somFeedback.play().then(() => { somFeedback.pause(); somFeedback.currentTime = 0; }).catch(() => {}); 
             document.getElementById('overlay-inicio').style.display = 'none'; 
@@ -203,27 +245,16 @@
                 const notif = document.getElementById('notificacao-atendimento');
 
                 if (data) {
-                    // Recebimento de Mensagem Personalizada do Gerente
-                    if (data.mensagemPersonalizada && data.mensagemPersonalizada !== ultimaMensagemRecebida) {
-                        ultimaMensagemRecebida = data.mensagemPersonalizada;
+                    if (data.mensagemGerente) {
                         somFeedback.play().catch(() => {});
-                        document.getElementById('texto-feedback').innerText = "💬 " + data.mensagemPersonalizada;
-                        notif.style.backgroundColor = "#d97706"; // Amarelo
+                        document.getElementById('texto-feedback').innerText = "💬 " + data.mensagemGerente;
+                        notif.style.backgroundColor = "#d97706";
                         notif.style.display = 'block';
 
-                        // Se o celular estiver com a tela desligada/no bolso e aceitou notificações
-                        if ("Notification" in window && Notification.permission === "granted") {
-                            new Notification("Fatia's Control - Mesa " + numMesa, {
-                                body: data.mensagemPersonalizada,
-                                icon: "fundo.jpg"
-                            });
-                        }
-
-                        setTimeout(() => { notif.style.display = 'none'; }, 8000);
-                    }
-
-                    // Recebimento de confirmação de Atendimento
-                    else if (data.status === 'atendido') {
+                        setTimeout(() => {
+                            db.ref('chamados/' + numMesa + '/mensagemGerente').remove();
+                        }, 8000);
+                    } else if (data.status === 'atendido') {
                         somFeedback.play().catch(() => {});
                         const msg = (data.acao === "Garçom") ? "✅ O GARÇOM ESTÁ A CAMINHO!" : "✅ A CONTA ESTÁ VINDO!";
                         document.getElementById('texto-feedback').innerText = msg;
@@ -232,7 +263,6 @@
 
                         setTimeout(() => { 
                             notif.style.display = 'none'; 
-                            db.ref('chamados/' + numMesa).remove();
                         }, 6000);
                     }
                 }
